@@ -680,5 +680,92 @@ def stop_timer() -> None:
         rprint("[red]Error: 'timew' command not found. Make sure timewarrior is installed.[/red]")
         raise typer.Exit(1)
 
+
+@app.command("undo")
+def undo_last_action() -> None:
+    """Undo the last timewarrior operation and show before/after status."""
+    try:
+        # Get last 3 entries before undo
+        try:
+            result_before = subprocess.run(
+                ["timew", "export", ":day"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            if result_before.stdout.strip():
+                data_before = json.loads(result_before.stdout)
+                entries_before = [TimeEntry.from_dict(entry) for entry in data_before]
+                
+                rprint("Last 3 entries before undo:")
+                for i, entry in enumerate(entries_before[-3:], 1):
+                    start_time = entry.parse_start().strftime("%H:%M")
+                    if entry.end:
+                        end_time = entry.parse_end().strftime("%H:%M")
+                        duration = f"{entry.get_duration_hours():.1f}h"
+                    else:
+                        end_time = "Active"
+                        duration = f"{entry.get_duration_hours():.1f}h"
+                    
+                    annotation = entry.annotation or "No annotation"
+                    rprint(f"  {i}. {start_time}-{end_time} ({duration})  {annotation}")
+            else:
+                rprint("No entries found before undo.")
+                
+        except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
+            rprint(f"[yellow]Warning: Could not get entries before undo: {e}[/yellow]")
+        
+        rprint("\n[bold blue]⏪ Undoing last timewarrior operation...[/bold blue]")
+        
+        # Execute the undo command
+        result = subprocess.run(
+            ["timew", "undo"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        # Get last 3 entries after undo
+        try:
+            result_after = subprocess.run(
+                ["timew", "export", ":day"],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            rprint("\nLast 3 entries after undo:")
+            if result_after.stdout.strip():
+                data_after = json.loads(result_after.stdout)
+                entries_after = [TimeEntry.from_dict(entry) for entry in data_after]
+                
+                for i, entry in enumerate(entries_after[-3:], 1):
+                    start_time = entry.parse_start().strftime("%H:%M")
+                    if entry.end:
+                        end_time = entry.parse_end().strftime("%H:%M")
+                        duration = f"{entry.get_duration_hours():.1f}h"
+                    else:
+                        end_time = "Active"
+                        duration = f"{entry.get_duration_hours():.1f}h"
+                    
+                    annotation = entry.annotation or "No annotation"
+                    rprint(f"  {i}. {start_time}-{end_time} ({duration})  {annotation}")
+            else:
+                rprint("No entries found after undo.")
+                
+        except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
+            rprint(f"[yellow]Warning: Could not get entries after undo: {e}[/yellow]")
+            
+    except subprocess.CalledProcessError as e:
+        if "No undo information" in e.stderr or "Nothing to undo" in e.stderr:
+            rprint("[yellow]Nothing to undo - no recent operations found[/yellow]")
+        else:
+            rprint(f"[red]Error during undo: {e.stderr}[/red]")
+            raise typer.Exit(1)
+    except FileNotFoundError:
+        rprint("[red]Error: 'timew' command not found. Make sure timewarrior is installed.[/red]")
+        raise typer.Exit(1)
+
 if __name__ == "__main__":
     app()
