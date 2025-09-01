@@ -637,11 +637,11 @@ def _print_summary(entries: List[TimeEntry], timespan: str, tag_filter: Optional
             
             # Neutral color coding for individual entries (no productivity judgment)
             if duration >= 2:
-                duration_str = f"[bold green]{duration:.1f}h[/bold green]"  # Long duration
+                duration_str = f"[bold green]{duration:.2f}h[/bold green]"  # Long duration
             elif duration >= 1:
-                duration_str = f"[yellow]{duration:.1f}h[/yellow]"          # Medium duration
+                duration_str = f"[yellow]{duration:.2f}h[/yellow]"          # Medium duration
             else:
-                duration_str = f"[blue]{duration:.1f}h[/blue]"              # Short duration
+                duration_str = f"[blue]{duration:.2f}h[/blue]"              # Short duration
             
             # Join tags with commas
             tags_str = ", ".join(entry.tags)
@@ -681,81 +681,114 @@ def stop_timer() -> None:
         raise typer.Exit(1)
 
 
-@app.command("undo")
-def undo_last_action() -> None:
-    """Undo the last timewarrior operation and show before/after status."""
+def _get_current_entries() -> List[TimeEntry]:
+    """Get current timewarrior entries for today."""
     try:
-        # Get last 3 entries before undo
-        try:
-            result_before = subprocess.run(
-                ["timew", "export", ":day"],
-                capture_output=True,
-                text=True,
-                check=True
-            )
-            
-            if result_before.stdout.strip():
-                data_before = json.loads(result_before.stdout)
-                entries_before = [TimeEntry.from_dict(entry) for entry in data_before]
-                
-                rprint("Last 3 entries before undo:")
-                for i, entry in enumerate(entries_before[-3:], 1):
-                    start_time = entry.parse_start().strftime("%H:%M")
-                    if entry.end:
-                        end_time = entry.parse_end().strftime("%H:%M")
-                        duration = f"{entry.get_duration_hours():.1f}h"
-                    else:
-                        end_time = "Active"
-                        duration = f"{entry.get_duration_hours():.1f}h"
-                    
-                    annotation = entry.annotation or "No annotation"
-                    rprint(f"  {i}. {start_time}-{end_time} ({duration})  {annotation}")
-            else:
-                rprint("No entries found before undo.")
-                
-        except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
-            rprint(f"[yellow]Warning: Could not get entries before undo: {e}[/yellow]")
-        
-        rprint("\n[bold blue]⏪ Undoing last timewarrior operation...[/bold blue]")
-        
-        # Execute the undo command
         result = subprocess.run(
-            ["timew", "undo"],
+            ["timew", "export", ":day"],
             capture_output=True,
             text=True,
             check=True
         )
         
-        # Get last 3 entries after undo
-        try:
-            result_after = subprocess.run(
-                ["timew", "export", ":day"],
+        if result.stdout.strip():
+            data = json.loads(result.stdout)
+            return [TimeEntry.from_dict(entry) for entry in data]
+        return []
+    except (subprocess.CalledProcessError, json.JSONDecodeError):
+        return []
+
+
+def _entries_have_meaningful_difference(before: List[TimeEntry], after: List[TimeEntry]) -> bool:
+    """Check if there's a meaningful difference between entry lists (not just annotation/tag changes)."""
+    # If different number of entries, that's meaningful
+    if len(before) != len(after):
+        return True
+    
+    # Compare each entry for meaningful changes
+    for b_entry, a_entry in zip(before, after):
+        # Check for time changes (start/end times)
+        if b_entry.start != a_entry.start or b_entry.end != a_entry.end:
+            return True
+        
+        # Check for ID changes (new/deleted entries)
+        if b_entry.id != a_entry.id:
+            return True
+    
+    # Only annotation or tag changes - not meaningful
+    return False
+
+
+def _display_entries(entries: List[TimeEntry], title: str) -> None:
+    """Display a list of entries in a formatted way."""
+    rprint(title)
+    if not entries:
+        rprint("No entries found.")
+        return
+        
+    for i, entry in enumerate(entries[-3:], 1):
+        start_time = entry.parse_start().strftime("%H:%M")
+        if entry.end:
+            end_time = entry.parse_end().strftime("%H:%M")
+            duration = f"{entry.get_duration_hours():.2f}h"
+        else:
+            end_time = "Active"
+            duration = f"{entry.get_duration_hours():.2f}h"
+        
+        annotation = entry.annotation or "No annotation"
+        tags_str = f"\\[{', '.join(entry.tags)}]" if entry.tags else "\\[no tags]"
+        output_line = f"  {i}. {start_time}-{end_time} ({duration}) {tags_str} {annotation}"
+        rprint(output_line)
+
+
+@app.command("undo")
+def undo_last_action() -> None:
+    """Undo the last timewarrior operation and show before/after status. 
+    
+    If the undo only removes tags or annotations, it will repeat the undo 
+    until there's a meaningful state change (time changes, entry additions/deletions).
+    """
+    try:
+        # Get initial state
+        initial_entries = _get_current_entries()
+        _display_entries(initial_entries, "Last 3 entries before undo:")
+        
+        undo_count = 0
+        current_entries = initial_entries
+        
+        while True:
+            undo_count += 1
+            
+            rprint(f"\n[bold blue]⏪ Undoing last timewarrior operation... (attempt {undo_count})[/bold blue]")
+            
+            # Execute the undo command
+            result = subprocess.run(
+                ["timew", "undo"],
                 capture_output=True,
                 text=True,
                 check=True
             )
             
-            rprint("\nLast 3 entries after undo:")
-            if result_after.stdout.strip():
-                data_after = json.loads(result_after.stdout)
-                entries_after = [TimeEntry.from_dict(entry) for entry in data_after]
-                
-                for i, entry in enumerate(entries_after[-3:], 1):
-                    start_time = entry.parse_start().strftime("%H:%M")
-                    if entry.end:
-                        end_time = entry.parse_end().strftime("%H:%M")
-                        duration = f"{entry.get_duration_hours():.1f}h"
-                    else:
-                        end_time = "Active"
-                        duration = f"{entry.get_duration_hours():.1f}h"
-                    
-                    annotation = entry.annotation or "No annotation"
-                    rprint(f"  {i}. {start_time}-{end_time} ({duration})  {annotation}")
+            # Get entries after this undo
+            new_entries = _get_current_entries()
+            
+            # Check if there's a meaningful difference
+            if _entries_have_meaningful_difference(current_entries, new_entries):
+                # Meaningful change found, stop here
+                _display_entries(new_entries, "\nLast 3 entries after undo:")
+                if undo_count > 1:
+                    rprint(f"\n[green]✓ Completed {undo_count} undo operations to reach meaningful state change[/green]")
+                break
             else:
-                rprint("No entries found after undo.")
+                # Only annotation/tag changes, continue undoing
+                current_entries = new_entries
+                _display_entries(new_entries, f"\nLast 3 entries after undo {undo_count}:")
+                rprint("[yellow]Only tags/annotations changed, continuing undo...[/yellow]")
                 
-        except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
-            rprint(f"[yellow]Warning: Could not get entries after undo: {e}[/yellow]")
+                # Safety check to prevent infinite loops
+                if undo_count >= 10:
+                    rprint("[yellow]Stopped after 10 undo operations to prevent infinite loop[/yellow]")
+                    break
             
     except subprocess.CalledProcessError as e:
         if "No undo information" in e.stderr or "Nothing to undo" in e.stderr:
