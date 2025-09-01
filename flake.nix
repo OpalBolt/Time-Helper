@@ -28,6 +28,7 @@
           typer # CLI framework
           rich # Terminal formatting
           pydantic # Data validation
+          loguru # Modern logging
         ]
       );
       # Build the actual package
@@ -46,6 +47,7 @@
           typer
           rich
           pydantic
+          loguru
         ];
         
         # Runtime dependencies (timewarrior)

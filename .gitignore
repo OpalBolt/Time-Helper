@@ -137,3 +137,7 @@ time_helper.db
 
 # UV lock file (can be regenerated)
 uv.lock
+
+# Local test files
+
+REFACTOR_SUMMARY.md
