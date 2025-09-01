@@ -9,6 +9,8 @@ import json
 from datetime import datetime, timedelta, date, timezone
 import subprocess
 import re
+import readline
+import sys
 from .models import TimeEntry
 from .database import Database
 from .report_generator import ReportGenerator
@@ -22,13 +24,69 @@ app = typer.Typer(
 
 console = Console()
 
+class TagCompleter:
+    """Tab completion for tags."""
+    
+    def __init__(self, tags: List[str]):
+        self.tags = sorted(tags)  # Sort for consistent ordering
+    
+    def complete(self, text: str, state: int) -> Optional[str]:
+        """Return the next possible completion for 'text'."""
+        # Handle case-insensitive matching
+        text_lower = text.lower()
+        
+        # Filter tags that start with the input text (case-insensitive)
+        matches = [tag for tag in self.tags if tag.lower().startswith(text_lower)]
+        
+        # Return the state-th match, or None if there aren't enough matches
+        try:
+            return matches[state]
+        except IndexError:
+            return None
+
+def get_user_input_with_completion(prompt: str, tags: List[str]) -> str:
+    """Get user input with tab completion for tags."""
+    # Only enable completion if we're in a real terminal
+    if not sys.stdin.isatty():
+        return input(prompt)
+    
+    try:
+        # Set up tab completion
+        completer = TagCompleter(tags)
+        readline.set_completer(completer.complete)
+        readline.parse_and_bind("tab: complete")
+        
+        # Get input with completion
+        return input(prompt)
+    except (ImportError, AttributeError):
+        # Fallback if readline is not available
+        return input(prompt)
+    finally:
+        # Clean up
+        try:
+            readline.set_completer(None)
+        except:
+            pass
+
 def start_timer(args: Optional[List[str]] = None) -> None:
     """Start a timew timer interactively or with command line arguments."""
     try:
         # If no args provided, get input interactively
         if not args:
             rprint("[bold blue]Starting new timer...[/bold blue]")
-            user_input = typer.prompt("Enter tag and optional annotation (tag annotation)").strip()
+            
+            # Get available tags for completion
+            try:
+                db = Database()
+                tag_data = db.get_all_tags()
+                available_tags = [tag['tag'] for tag in tag_data]
+            except Exception:
+                # Fallback if database is not available
+                available_tags = []
+            
+            # Get user input with tab completion
+            prompt_text = "Enter tag and optional annotation (tag annotation): "
+            user_input = get_user_input_with_completion(prompt_text, available_tags).strip()
             
             if not user_input:
                 rprint("[red]Error: Tag cannot be empty[/red]")
@@ -335,10 +393,27 @@ def init_database() -> None:
     """Initialize the database schema."""
     
     try:
-        Database()  # This will initialize the database
+        db = Database()  # This will initialize the database
         rprint("[green]✓ Database initialized successfully![/green]")
+        rprint(f"[dim]Database location: {db.db_path}[/dim]")
     except Exception as e:
         rprint(f"[red]Error initializing database: {e}[/red]")
+        raise typer.Exit(1)
+
+@app.command("db-path")
+def show_database_path() -> None:
+    """Show the path to the database file."""
+    
+    try:
+        db = Database()
+        rprint(f"[bold]Database location:[/bold] {db.db_path}")
+        if db.db_path.exists():
+            size = db.db_path.stat().st_size
+            rprint(f"[dim]Database size: {size:,} bytes[/dim]")
+        else:
+            rprint("[yellow]Database file does not exist yet. Run 'init' command to create it.[/yellow]")
+    except Exception as e:
+        rprint(f"[red]Error accessing database: {e}[/red]")
         raise typer.Exit(1)
 
 @app.command("summary")

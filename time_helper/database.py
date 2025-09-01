@@ -1,6 +1,7 @@
 """Database operations for time tracking data."""
 
 import sqlite3
+import os
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from pathlib import Path
@@ -10,10 +11,44 @@ from .models import TimeEntry, WeeklyReport, DailyReport, TagSummary
 class Database:
     """Handle SQLite database operations for time tracking data."""
     
-    def __init__(self, db_path: str = "time_helper.db"):
+    def __init__(self, db_path: Optional[str] = None):
         """Initialize database connection and create tables if needed."""
+        if db_path is None:
+            db_path = self._get_default_db_path()
         self.db_path = Path(db_path)
+        # Ensure the directory exists
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.init_db()
+    
+    def _get_default_db_path(self) -> str:
+        """Get the default database path in a central location."""
+        # Allow override via environment variable
+        env_path = os.environ.get('TIME_HELPER_DB_PATH')
+        if env_path:
+            return env_path
+            
+        # Use XDG Base Directory Specification on Linux/Unix
+        if os.name == 'posix':
+            # Use XDG_DATA_HOME if set, otherwise default to ~/.local/share
+            data_home = os.environ.get('XDG_DATA_HOME')
+            if data_home:
+                base_dir = Path(data_home)
+            else:
+                base_dir = Path.home() / '.local' / 'share'
+        # Use AppData on Windows
+        elif os.name == 'nt':
+            app_data = os.environ.get('APPDATA')
+            if app_data:
+                base_dir = Path(app_data)
+            else:
+                base_dir = Path.home() / 'AppData' / 'Roaming'
+        # Fallback for other systems
+        else:
+            base_dir = Path.home() / '.local' / 'share'
+        
+        # Create time-helper specific directory
+        app_dir = base_dir / 'time-helper'
+        return str(app_dir / 'time_helper.db')
     
     def init_db(self) -> None:
         """Initialize database schema."""

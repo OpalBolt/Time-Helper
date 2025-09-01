@@ -19,6 +19,7 @@ uv run time-helper init
 # Start timer (interactive)
 time-helper
 # → Enter: client-name Working on project
+# → TAB completion available for existing tags!
 
 # Stop timer
 time-helper stop
@@ -35,6 +36,41 @@ time-helper report
 | `time-helper stop` | Stop current timer |
 | `time-helper report` | Generate weekly report |
 | `time-helper su :week` | Quick summary |
+| `time-helper db-path` | Show database location |
+
+## Database Storage
+
+The database is stored in a central location:
+
+- **Linux/Unix**: `~/.local/share/time-helper/time_helper.db`
+- **Windows**: `%APPDATA%/time-helper/time_helper.db`
+
+Use `time-helper db-path` to see the exact location on your system.
+
+## Interactive Features
+
+When starting a timer interactively with `time-helper` (no arguments), the tool provides:
+
+- **Tab completion** for existing tags from your database
+- **Case-insensitive matching** - type "adm" and TAB to complete "admin"
+- **Multiple matches** - press TAB multiple times to cycle through options
+- **Smart suggestions** based on your most-used tags
+
+Example workflow:
+
+```bash
+time-helper
+# Type "adm" and press TAB → completes to "admin"
+# Type "admin-" and press TAB → completes to "admin-meeting"
+```
+
+### Custom Database Location
+
+You can override the default database location by setting the `TIME_HELPER_DB_PATH` environment variable:
+
+```bash
+export TIME_HELPER_DB_PATH="/path/to/your/custom/time_helper.db"
+```
 
 ## Example Output
 
