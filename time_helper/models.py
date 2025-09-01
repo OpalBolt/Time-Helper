@@ -3,7 +3,7 @@
 from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
 from datetime import datetime, date as Date, timezone
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class TimeEntry(BaseModel):
@@ -16,9 +16,15 @@ class TimeEntry(BaseModel):
     annotation: Optional[str] = None
     date: Optional[Date] = None
     
+    @field_validator('tags')
+    @classmethod
+    def normalize_tags(cls, v: List[str]) -> List[str]:
+        """Normalize tags to lowercase for consistency."""
+        return [tag.lower() for tag in v] if v else []
+    
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'TimeEntry':
-        """Create a TimeEntry from a dictionary."""
+        """Create a TimeEntry from a dictionary with normalized tags."""
         return cls(**data)
     
     def parse_start(self) -> datetime:

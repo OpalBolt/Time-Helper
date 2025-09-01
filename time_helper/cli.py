@@ -11,6 +11,7 @@ import subprocess
 import re
 import readline
 import sys
+import sqlite3
 from .models import TimeEntry
 from .database import Database
 from .report_generator import ReportGenerator
@@ -103,7 +104,7 @@ def start_timer(args: Optional[List[str]] = None) -> None:
             args = args[:-1]  # Remove time from args
         
         # First argument is the tag
-        tag = args[0]
+        tag = args[0].lower()  # Normalize tag to lowercase
         # Rest are annotation
         annotation = " ".join(args[1:]) if len(args) > 1 else ""
         
@@ -388,6 +389,133 @@ def list_tags() -> None:
     
     console.print(table)
 
+@app.command("import-all")
+def import_all_data(
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be imported without actually importing"),
+    force: bool = typer.Option(False, "--force", help="Force import even if database already contains data")
+) -> None:
+    """Import all time tracking data from timewarrior into the database."""
+    
+    try:
+        db = Database()
+        
+        # Check if database already has data (unless force is used)
+        if not force and not dry_run:
+            with sqlite3.connect(db.db_path) as conn:
+                cursor = conn.execute("SELECT COUNT(*) FROM time_entries")
+                existing_count = cursor.fetchone()[0]
+                if existing_count > 0:
+                    rprint(f"[yellow]Warning: Database already contains {existing_count:,} entries.[/yellow]")
+                    rprint("[yellow]Use --force to import anyway (may create duplicates) or --dry-run to preview.[/yellow]")
+                    confirm = typer.confirm("Continue with import?")
+                    if not confirm:
+                        rprint("[yellow]Import cancelled[/yellow]")
+                        return
+        
+        action_word = "Analyzing" if dry_run else "Importing"
+        rprint(f"[bold blue]{action_word} all timewarrior data{'...' if not dry_run else ' (dry run)...'}[/bold blue]")
+        
+        # Get all data from timewarrior
+        result = subprocess.run(
+            ["timew", "export", ":all"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
+        # Parse JSON data
+        try:
+            data = json.loads(result.stdout)
+            if not data:
+                rprint("[yellow]No data found in timewarrior[/yellow]")
+                return
+                
+        except json.JSONDecodeError as e:
+            rprint(f"[red]Error parsing timewarrior data: {e}[/red]")
+            raise typer.Exit(1)
+        
+        # Convert to TimeEntry objects and group by date
+        entries_by_date = {}
+        total_entries = 0
+        earliest_date = None
+        latest_date = None
+        
+        rprint(f"[green]Processing {len(data)} entries...[/green]")
+        
+        for entry_data in data:
+            try:
+                entry = TimeEntry.from_dict(entry_data)
+                # Set the date based on the start time
+                entry.date = entry.parse_start().date()
+                
+                # Track date range
+                if earliest_date is None or entry.date < earliest_date:
+                    earliest_date = entry.date
+                if latest_date is None or entry.date > latest_date:
+                    latest_date = entry.date
+                
+                # Group entries by date for efficient database storage
+                if entry.date not in entries_by_date:
+                    entries_by_date[entry.date] = []
+                entries_by_date[entry.date].append(entry)
+                total_entries += 1
+                
+            except Exception as e:
+                rprint(f"[yellow]Warning: Could not process entry {entry_data.get('id', 'unknown')}: {e}[/yellow]")
+                continue
+        
+        if dry_run:
+            # Show summary for dry run
+            rprint(f"\n[bold blue]Dry Run Summary:[/bold blue]")
+            rprint(f"[green]Total entries to import: {total_entries:,}[/green]")
+            rprint(f"[green]Date range: {earliest_date} to {latest_date}[/green]")
+            rprint(f"[green]Number of days: {len(entries_by_date)}[/green]")
+            
+            # Show tag summary
+            tag_counts = {}
+            for entries in entries_by_date.values():
+                for entry in entries:
+                    tag = entry.get_primary_tag()
+                    tag_counts[tag] = tag_counts.get(tag, 0) + 1
+            
+            rprint(f"[green]Unique tags: {len(tag_counts)}[/green]")
+            
+            # Show top 10 tags
+            if tag_counts:
+                sorted_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+                rprint(f"\n[bold blue]Top 10 tags by entry count:[/bold blue]")
+                for tag, count in sorted_tags:
+                    rprint(f"[dim]  • {tag}: {count} entries[/dim]")
+            
+            rprint(f"\n[yellow]Use 'import-all' without --dry-run to perform the actual import.[/yellow]")
+            return
+        
+        # Store entries in database, grouped by date
+        imported_count = 0
+        for entry_date, entries in entries_by_date.items():
+            try:
+                db.store_time_entries(entries, entry_date)
+                imported_count += len(entries)
+                if len(entries_by_date) > 20:  # Only show progress for large imports
+                    rprint(f"[dim]  • Imported {len(entries)} entries for {entry_date}[/dim]")
+            except Exception as e:
+                rprint(f"[yellow]Warning: Could not store entries for {entry_date}: {e}[/yellow]")
+        
+        rprint(f"\n[bold green]✓ Import complete![/bold green]")
+        rprint(f"[green]Successfully imported {imported_count:,} out of {total_entries:,} entries[/green]")
+        rprint(f"[green]Date range: {earliest_date} to {latest_date}[/green]")
+        rprint(f"[dim]Database location: {db.db_path}[/dim]")
+        
+    except subprocess.CalledProcessError as e:
+        rprint(f"[red]Error running timewarrior export: {e.stderr}[/red]")
+        raise typer.Exit(1)
+    except FileNotFoundError:
+        rprint("[red]Error: 'timew' command not found. Make sure timewarrior is installed.[/red]")
+        raise typer.Exit(1)
+    except Exception as e:
+        rprint(f"[red]Unexpected error during import: {e}[/red]")
+        raise typer.Exit(1)
+
 @app.command("init")
 def init_database() -> None:
     """Initialize the database schema."""
@@ -398,6 +526,54 @@ def init_database() -> None:
         rprint(f"[dim]Database location: {db.db_path}[/dim]")
     except Exception as e:
         rprint(f"[red]Error initializing database: {e}[/red]")
+        raise typer.Exit(1)
+
+@app.command("db-status")
+def database_status() -> None:
+    """Show database status and statistics."""
+    
+    try:
+        db = Database()
+        
+        # Get basic statistics
+        with sqlite3.connect(db.db_path) as conn:
+            # Total entries
+            cursor = conn.execute("SELECT COUNT(*) FROM time_entries")
+            total_entries = cursor.fetchone()[0]
+            
+            # Date range
+            cursor = conn.execute("SELECT MIN(date), MAX(date) FROM time_entries")
+            date_range = cursor.fetchone()
+            
+            # Total hours
+            cursor = conn.execute("SELECT SUM(hours) FROM time_entries")
+            total_hours = cursor.fetchone()[0] or 0
+            
+            # Unique tags
+            cursor = conn.execute("SELECT COUNT(DISTINCT tag) FROM time_entries")
+            unique_tags = cursor.fetchone()[0]
+            
+            # Recent activity (last 30 days)
+            cursor = conn.execute("""
+                SELECT COUNT(*) FROM time_entries 
+                WHERE date >= date('now', '-30 days')
+            """)
+            recent_entries = cursor.fetchone()[0]
+        
+        rprint(f"[bold blue]Database Status[/bold blue]")
+        rprint(f"[green]Location: {db.db_path}[/green]")
+        rprint(f"[green]Total entries: {total_entries:,}[/green]")
+        
+        if total_entries > 0:
+            rprint(f"[green]Date range: {date_range[0]} to {date_range[1]}[/green]")
+            rprint(f"[green]Total hours tracked: {total_hours:.2f}[/green]")
+            rprint(f"[green]Unique tags: {unique_tags}[/green]")
+            rprint(f"[green]Recent entries (last 30 days): {recent_entries:,}[/green]")
+        else:
+            rprint("[yellow]Database is empty. Use 'import-all' to import data from timewarrior.[/yellow]")
+            
+    except Exception as e:
+        rprint(f"[red]Error checking database status: {e}[/red]")
         raise typer.Exit(1)
 
 @app.command("db-path")
