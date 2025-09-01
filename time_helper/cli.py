@@ -23,6 +23,14 @@ app = typer.Typer(
     rich_markup_mode="rich"
 )
 
+# Create subcommands for logical grouping
+db_app = typer.Typer(help="Database management commands")
+report_app = typer.Typer(help="Reporting and data export commands")
+
+# Add subcommands to main app
+app.add_typer(db_app, name="db")
+app.add_typer(report_app, name="report")
+
 console = Console()
 
 class TagCompleter:
@@ -152,7 +160,7 @@ def start_command(
     """Start a timer with command line arguments."""
     start_timer(args)
 
-@app.command("export")
+@report_app.command("export")
 def export_week(
     week_offset: int = typer.Option(0, "--week", "-w", help="Week offset from current week (0=current, -1=last week, etc.)"),
     year: Optional[int] = typer.Option(None, "--year", "-y", help="Year for the week (defaults to current year)"),
@@ -216,7 +224,7 @@ def export_week(
     
     rprint(f"\n[bold green]Export complete![/bold green] Cached {cached_entries} entries to database.")
 
-@app.command("report")
+@report_app.command("generate")
 def generate_report(
     week_offset: int = typer.Option(0, "--week", "-w", help="Week offset from current week (0=current, -1=last week, etc.)"),
     year: Optional[int] = typer.Option(None, "--year", "-y", help="Year for the week (defaults to current year)"),
@@ -328,7 +336,7 @@ def generate_report(
         except Exception as e:
             rprint(f"[yellow]Could not cache report: {e}[/yellow]")
 
-@app.command("list-weeks")
+@report_app.command("list-weeks")
 def list_weeks(
     count: int = typer.Option(10, "--count", "-c", help="Number of weeks to show")
 ) -> None:
@@ -364,7 +372,7 @@ def list_weeks(
     
     console.print(table)
 
-@app.command("tags")
+@report_app.command("tags")
 def list_tags() -> None:
     """List all known tags from the database."""
     
@@ -389,7 +397,7 @@ def list_tags() -> None:
     
     console.print(table)
 
-@app.command("import-all")
+@db_app.command("import-all")
 def import_all_data(
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be imported without actually importing"),
     force: bool = typer.Option(False, "--force", help="Force import even if database already contains data")
@@ -516,7 +524,7 @@ def import_all_data(
         rprint(f"[red]Unexpected error during import: {e}[/red]")
         raise typer.Exit(1)
 
-@app.command("init")
+@db_app.command("init")
 def init_database() -> None:
     """Initialize the database schema."""
     
@@ -528,7 +536,7 @@ def init_database() -> None:
         rprint(f"[red]Error initializing database: {e}[/red]")
         raise typer.Exit(1)
 
-@app.command("db-status")
+@db_app.command("status")
 def database_status() -> None:
     """Show database status and statistics."""
     
@@ -576,7 +584,7 @@ def database_status() -> None:
         rprint(f"[red]Error checking database status: {e}[/red]")
         raise typer.Exit(1)
 
-@app.command("db-path")
+@db_app.command("path")
 def show_database_path() -> None:
     """Show the path to the database file."""
     
@@ -591,37 +599,6 @@ def show_database_path() -> None:
     except Exception as e:
         rprint(f"[red]Error accessing database: {e}[/red]")
         raise typer.Exit(1)
-
-@app.command("summary")
-@app.command("su", hidden=True)
-def su(
-    timespan: str = typer.Argument(":day", help="Timespan to export (e.g., :day, :week, :week-2, :month)"),
-    tag_filter: Optional[str] = typer.Argument(None, help="Filter entries by tag (e.g., 'admin', 'dev')")
-) -> None:
-    """Display timewarrior data with formatting and optional tag filtering (short alias for summary).
-    
-    Shows time tracking data with timezone-aware timestamps and color-coded duration indicators.
-    
-    COLOR CODING:
-    • 🟢 Green: Long duration entries (≥4h total, ≥2h individual)
-    • 🟡 Yellow: Medium duration entries (2-4h total, 1-2h individual) 
-    • � Blue: Short duration entries (<2h total, <1h individual)
-    • 🔵 Blue: Status and informational messages
-    • ⚪ Gray/Dim: Inactive entries or missing data
-    • → Red arrow: Currently active timer
-    
-    TIMESPAN FORMATS:
-    • :day, :week, :month - Current period
-    • :week-1, :week-2 - Previous periods (1 week ago, 2 weeks ago)
-    • :yesterday, :today - Specific days
-    
-    Examples:
-        time-helper su :week          # Show current week
-        time-helper su :week-2        # Show 2 weeks ago
-        time-helper su :week admin    # Show current week filtered by 'admin' tag
-        time-helper su :day randcorp  # Show today filtered by 'randcorp' tag
-    """
-    _display_summary(timespan, tag_filter)
 
 
 def _convert_timespan_format(timespan: str) -> str:
@@ -916,6 +893,37 @@ def _display_entries(entries: List[TimeEntry], title: str) -> None:
         output_line = f"  {i}. {start_time}-{end_time} ({duration}) {tags_str} {annotation}"
         rprint(output_line)
 
+
+@app.command("summary")
+@app.command("su", hidden=True)
+def su(
+    timespan: str = typer.Argument(":day", help="Timespan to export (e.g., :day, :week, :week-2, :month)"),
+    tag_filter: Optional[str] = typer.Argument(None, help="Filter entries by tag (e.g., 'admin', 'dev')")
+) -> None:
+    """Display timewarrior data with formatting and optional tag filtering (short alias for summary).
+    
+    Shows time tracking data with timezone-aware timestamps and color-coded duration indicators.
+    
+    COLOR CODING:
+    • 🟢 Green: Long duration entries (≥4h total, ≥2h individual)
+    • 🟡 Yellow: Medium duration entries (2-4h total, 1-2h individual) 
+    • 🔵 Blue: Short duration entries (<2h total, <1h individual)
+    • 🔵 Blue: Status and informational messages
+    • ⚪ Gray/Dim: Inactive entries or missing data
+    • → Red arrow: Currently active timer
+    
+    TIMESPAN FORMATS:
+    • :day, :week, :month - Current period
+    • :week-1, :week-2 - Previous periods (1 week ago, 2 weeks ago)
+    • :yesterday, :today - Specific days
+    
+    Examples:
+        time-helper su :week          # Show current week
+        time-helper su :week-2        # Show 2 weeks ago
+        time-helper su :week admin    # Show current week filtered by 'admin' tag
+        time-helper su :day randcorp  # Show today filtered by 'randcorp' tag
+    """
+    _display_summary(timespan, tag_filter)
 
 @app.command("undo")
 def undo_last_action() -> None:
