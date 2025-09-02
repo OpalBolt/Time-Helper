@@ -70,19 +70,6 @@
           # Fish completion - enter fish shell and run completion generation
           echo '$out/bin/time-helper --show-completion > time-helper.fish' | ${pkgs.fish}/bin/fish
           installShellCompletion --cmd time-helper --fish time-helper.fish
-          
-          # Create 'th' alias symlink
-          ln -s $out/bin/time-helper $out/bin/th
-          
-          # Generate completions for the 'th' alias too
-          echo '$out/bin/th --show-completion > th.zsh' | ${pkgs.zsh}/bin/zsh
-          installShellCompletion --cmd th --zsh th.zsh
-          
-          echo '$out/bin/th --show-completion > th.bash' | bash
-          installShellCompletion --cmd th --bash th.bash
-          
-          echo '$out/bin/th --show-completion > th.fish' | ${pkgs.fish}/bin/fish
-          installShellCompletion --cmd th --fish th.fish
         '';
         
         meta = {
