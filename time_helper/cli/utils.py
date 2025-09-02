@@ -142,6 +142,9 @@ def handle_timew_errors(func):
                 rprint("[yellow]No active timer to stop[/yellow]")
             elif "Nothing to undo" in e.stderr:
                 rprint("[yellow]Nothing to undo - no recent operations found[/yellow]")
+            elif "You cannot overlap intervals" in e.stderr:
+                rprint("[yellow]⚠️  Time overlap detected - the specified start time conflicts with existing intervals[/yellow]")
+                rprint("[dim]Hint: Use 'timew stop' to end current tracking, or choose a different start time[/dim]")
             else:
                 logger.error(f"Timewarrior error: {e.stderr}")
                 rprint(f"[red]Error: {e.stderr}[/red]")
@@ -215,7 +218,7 @@ def display_entries(entries: List[TimeEntry], title: str) -> None:
         rprint("No entries found.")
         return
     
-    for i, entry in enumerate(entries[-3:], 1):
+    for i, entry in enumerate(entries, 1):
         start_time = entry.parse_start().strftime("%H:%M")
         
         if entry.end:

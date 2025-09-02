@@ -12,7 +12,7 @@ class TimeEntry(BaseModel):
     id: int
     start: str
     end: Optional[str] = None  # Optional to handle active timers
-    tags: List[str]
+    tags: List[str] = []  # Default to empty list for entries without tags
     annotation: Optional[str] = None
     date: Optional[Date] = None
     

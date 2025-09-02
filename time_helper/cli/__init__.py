@@ -16,7 +16,6 @@ logger = get_logger(__name__)
 # Create main app
 app = typer.Typer(
     help="Time tracking helper tool for timewarrior",
-    no_args_is_help=True,
     pretty_exceptions_enable=False
 )
 
@@ -27,13 +26,13 @@ app.add_typer(create_report_commands(), name="report", help="Report generation")
 app.add_typer(create_database_commands(), name="db", help="Database management")
 
 
-@app.callback()
+@app.callback(invoke_without_command=True)
 def main_callback(
     verbose: int = typer.Option(0, "-v", "--verbose", count=True, help="Increase verbosity (-v for info, -vv for debug)"),
     debug: bool = typer.Option(False, "--debug", help="Enable debug logging (same as -vv)"),
     ctx: typer.Context = typer.Context
 ) -> None:
-    """Main callback to handle global options."""
+    """Main callback to handle global options and default behavior."""
     # Determine verbosity level
     verbosity = verbose
     if debug:
@@ -46,6 +45,10 @@ def main_callback(
         logger.debug("Debug logging enabled")
     elif verbosity >= 1:
         logger.info("Verbose logging enabled")
+    
+    # If no subcommand is invoked, start a timer interactively
+    if ctx.invoked_subcommand is None:
+        start_timer()
 
 
 # Add individual commands at root level for convenience
