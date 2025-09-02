@@ -4,7 +4,7 @@ import typer
 from typing import Optional
 
 from .timer_commands import create_timer_commands, start_timer, stop_timer, undo_last_action
-from .summary_commands import create_summary_commands, display_summary
+from .summary_commands import display_summary
 from .report_commands import create_report_commands
 from .database_commands import create_database_commands
 from ..logging_config import setup_logging, get_logger
@@ -21,7 +21,6 @@ app = typer.Typer(
 
 # Add sub-commands
 app.add_typer(create_timer_commands(), name="timer", help="Timer management")
-app.add_typer(create_summary_commands(), name="summary", help="Summary and display")
 app.add_typer(create_report_commands(), name="report", help="Report generation")
 app.add_typer(create_database_commands(), name="db", help="Database management")
 
