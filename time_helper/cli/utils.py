@@ -230,5 +230,5 @@ def display_entries(entries: List[TimeEntry], title: str) -> None:
         
         annotation = entry.annotation or "No annotation"
         tags_str = f"\\[{', '.join(entry.tags)}]" if entry.tags else "\\[no tags]"
-        output_line = f"  {i}. {start_time}-{end_time} ({duration}) {tags_str} {annotation}"
+        output_line = f"  {i}. [dim]ID:{entry.id}[/dim] {start_time}-{end_time} ({duration}) {tags_str} {annotation}"
         rprint(output_line)

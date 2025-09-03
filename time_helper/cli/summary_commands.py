@@ -135,6 +135,7 @@ def _create_detailed_table(entries: List[TimeEntry]) -> Table:
     logger.debug(f"Creating detailed table for {len(entries)} entries")
     
     detail_table = Table(show_header=True, header_style="bold magenta")
+    detail_table.add_column("ID", style="dim", width=6)
     detail_table.add_column("Start", style="cyan", width=8)
     detail_table.add_column("End", style="cyan", width=8)
     detail_table.add_column("Duration", style="green", width=8)
@@ -164,7 +165,7 @@ def _create_detailed_table(entries: List[TimeEntry]) -> Table:
         # Handle annotation
         annotation = entry.annotation or "[dim]—[/dim]"
         
-        detail_table.add_row(start_str, end_str, duration_str, tags_str, annotation)
+        detail_table.add_row(str(entry.id), start_str, end_str, duration_str, tags_str, annotation)
     
     return detail_table
 
@@ -248,20 +249,20 @@ def _print_summary(entries: List[TimeEntry], timespan: str, tag_filter: Optional
     rprint(f"\n[bold cyan]{title}[/bold cyan]")
     rprint(f"[bold white]Total: {total_hours:.2f} hours[/bold white]\n")
     
+    # Show detailed entries first
+    rprint("[bold cyan]Detailed Entries:[/bold cyan]")
+    
+    # Sort entries by start time
+    sorted_entries = sorted(entries, key=lambda x: x.parse_start())
+    
+    # Create and display detailed table
+    detail_table = _create_detailed_table(sorted_entries)
+    console.print(detail_table)
+    
     # Create and display summary table
+    rprint("\n[bold cyan]Summary by Tags:[/bold cyan]")
     summary_table = _create_summary_table(entries)
     console.print(summary_table)
-    
-    # Show detailed entries if there are few enough
-    if len(entries) <= 15:
-        rprint("\n[bold cyan]Detailed Entries:[/bold cyan]")
-        
-        # Sort entries by start time
-        sorted_entries = sorted(entries, key=lambda x: x.parse_start())
-        
-        # Create and display detailed table
-        detail_table = _create_detailed_table(sorted_entries)
-        console.print(detail_table)
 
 
 # Create typer commands
