@@ -1,12 +1,13 @@
 """Main CLI entry point for time-helper application."""
 
 import typer
-from typing import Optional
+from typing import Optional, List
 
 from .timer_commands import create_timer_commands, start_timer, stop_timer, undo_last_action
 from .summary_commands import display_summary
 from .report_commands import create_report_commands
 from .database_commands import create_database_commands
+from .annotate_commands import undo_annotation, handle_annotate_args
 from ..logging_config import setup_logging, get_logger
 
 # Initialize logging first (silent by default)
@@ -87,6 +88,34 @@ def su_command(
 ) -> None:
     """Display timewarrior data with formatting and optional tag filtering (short alias).""" 
     display_summary(timespan, tag_filter)
+
+
+@app.command("annotate")
+def annotate_command(
+    args: Optional[List[str]] = typer.Argument(None, help="Arguments: [timespan] or [entry_id] [annotation...]")
+) -> None:
+    """Update the annotation for a time entry."""
+    handle_annotate_args(args)
+
+
+@app.command("an", hidden=True)
+def an_command(
+    args: Optional[List[str]] = typer.Argument(None, help="Arguments: [timespan] or [entry_id] [annotation...]")
+) -> None:
+    """Update the annotation for a time entry (short alias)."""
+    handle_annotate_args(args)
+
+
+@app.command("undo-annotation")
+def undo_annotation_command() -> None:
+    """Undo the last annotation change only."""
+    undo_annotation()
+
+
+@app.command("uan", hidden=True)
+def uan_command() -> None:
+    """Undo the last annotation change only (short alias)."""
+    undo_annotation()
 
 
 if __name__ == "__main__":

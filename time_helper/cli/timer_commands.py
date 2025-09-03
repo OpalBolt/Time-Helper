@@ -254,13 +254,16 @@ def stop_timer() -> None:
 
 
 @handle_timew_errors
-def undo_last_action() -> None:
+def undo_last_action(single_operation: bool = False) -> None:
     """Undo the last timewarrior operation and show before/after status.
     
-    If the undo only removes tags or annotations, it will repeat the undo 
-    until there's a meaningful state change.
+    Args:
+        single_operation: If True, only perform one undo operation regardless of meaningfulness
+    
+    If single_operation is False and the undo only removes tags or annotations, 
+    it will repeat the undo until there's a meaningful state change.
     """
-    logger.debug("Starting undo operation")
+    logger.debug(f"Starting undo operation (single_operation={single_operation})")
     
     # Get initial state
     initial_entries = get_current_entries()
@@ -280,6 +283,13 @@ def undo_last_action() -> None:
         
         # Get entries after this undo
         new_entries = get_current_entries()
+        
+        # If single_operation is True, stop after one undo regardless of meaningfulness
+        if single_operation:
+            display_entries(new_entries, "\nLast 3 entries after undo:")
+            rprint("\n[green]✓ Undid last annotation change[/green]")
+            logger.info("Completed single undo operation")
+            break
         
         # Check if there's a meaningful difference
         if entries_have_meaningful_difference(current_entries, new_entries):
