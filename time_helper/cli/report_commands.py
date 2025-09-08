@@ -63,8 +63,14 @@ def _export_day_data(day_date: date) -> List[TimeEntry]:
     if result.returncode != 0:
         logger.warning(f"No data found for {date_str}")
         return []
+
+    entries = parse_timew_export(result.stdout)
     
-    return parse_timew_export(result.stdout)
+    # Ensure each entry has the correct date set
+    for entry in entries:
+        entry.date = day_date
+    
+    return entries
 
 
 def _remove_duplicate_entries(entries: List[TimeEntry]) -> List[TimeEntry]:
@@ -165,7 +171,8 @@ def generate_report(week_offset: int = 0, year: Optional[int] = None,
     
     if use_cache:
         logger.debug("Attempting to load from cache")
-        cached_entries = db.get_week_entries(week_start)
+        week_end = week_start + timedelta(days=6)
+        cached_entries = db.get_time_entries(week_start, week_end)
         if cached_entries:
             all_entries = cached_entries
             rprint(f"[blue]📋 Using cached data for week of {week_start.strftime('%B %d, %Y')}...[/blue]")
@@ -185,10 +192,21 @@ def generate_report(week_offset: int = 0, year: Optional[int] = None,
         # Remove duplicate entries
         all_entries = _remove_duplicate_entries(all_entries)
         
-        # Store in cache
+        # Store in cache by grouping entries by date
         if use_cache:
             try:
-                db.store_week_entries(week_start, all_entries)
+                # Group entries by date and store them
+                entries_by_date = {}
+                for entry in all_entries:
+                    entry_date = entry.date or entry.parse_start().date()
+                    if entry_date not in entries_by_date:
+                        entries_by_date[entry_date] = []
+                    entries_by_date[entry_date].append(entry)
+                
+                # Store each day's entries separately
+                for entry_date, day_entries in entries_by_date.items():
+                    db.store_time_entries(day_entries, entry_date)
+                
                 logger.info("Stored entries in cache")
             except Exception as e:
                 logger.error(f"Failed to cache entries: {e}")

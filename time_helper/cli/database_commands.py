@@ -260,6 +260,48 @@ def show_database_path() -> None:
         raise typer.Exit(1)
 
 
+def clear_cache(table: str = "all") -> None:
+    """Clear cached data from the database.
+    
+    Args:
+        table: Which table to clear ('time_entries', 'weekly_reports', or 'all')
+    """
+    logger.debug(f"Clearing cache for table: {table}")
+    
+    try:
+        db = Database()
+        
+        if not db.db_path.exists():
+            rprint("[yellow]No database file exists. Nothing to clear.[/yellow]")
+            return
+            
+        with sqlite3.connect(db.db_path) as conn:
+            if table == "all" or table == "time_entries":
+                result = conn.execute("DELETE FROM time_entries")
+                entries_deleted = result.rowcount
+                rprint(f"[green]✓ Cleared {entries_deleted} cached time entries[/green]")
+                
+            if table == "all" or table == "weekly_reports":
+                result = conn.execute("DELETE FROM weekly_reports")
+                reports_deleted = result.rowcount
+                rprint(f"[green]✓ Cleared {reports_deleted} cached weekly reports[/green]")
+                
+        # Vacuum outside of transaction to reclaim space
+        with sqlite3.connect(db.db_path) as conn:
+            conn.execute("VACUUM")
+            rprint("[green]✓ Database optimized[/green]")
+            
+        if table == "all":
+            rprint("[bold green]All cached data has been cleared![/bold green]")
+        else:
+            rprint(f"[bold green]Cached {table} data has been cleared![/bold green]")
+            
+    except Exception as e:
+        logger.error(f"Failed to clear cache: {e}")
+        rprint(f"[red]Error clearing cache: {e}[/red]")
+        raise typer.Exit(1)
+
+
 # Create typer commands
 def create_database_commands() -> typer.Typer:
     """Create and return the database commands typer app."""
@@ -287,5 +329,15 @@ def create_database_commands() -> typer.Typer:
     def path_command() -> None:
         """Show the path to the database file."""
         show_database_path()
+    
+    @db_app.command("clear-cache")
+    def clear_cache_command(
+        table: str = typer.Option("all", "--table", help="Which table to clear: 'time_entries', 'weekly_reports', or 'all'")
+    ) -> None:
+        """Clear cached data from the database."""
+        if table not in ["all", "time_entries", "weekly_reports"]:
+            rprint(f"[red]Error: Invalid table '{table}'. Must be 'all', 'time_entries', or 'weekly_reports'[/red]")
+            raise typer.Exit(1)
+        clear_cache(table)
     
     return db_app
