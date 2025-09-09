@@ -9,7 +9,7 @@ description = "Automated time tracking export and reporting tool"
 readme = "readme.md"
 requires-python = ">=3.11"
 dependencies = [
-    "typer[all]>=0.12.0",
+    "typer>=0.12.0",
     "rich>=13.7.0",
     "pydantic>=2.8.0",
     "loguru>=0.7.0",
@@ -22,4 +22,5 @@ time-helper = "time_helper.cli:app"
 dev-dependencies = [
     "pytest>=8.0.0",
     "mypy>=1.10.0",
+    "pyinstaller>=6.0.0",
 ]

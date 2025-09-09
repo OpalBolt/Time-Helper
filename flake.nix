@@ -29,19 +29,20 @@
           rich # Terminal formatting
           pydantic # Data validation
           loguru # Modern logging
+          pyinstaller # building python package
         ]
       );
       # Build the actual package
       time-helper = python.pkgs.buildPythonApplication {
         pname = "time-helper";
         version = "0.1.0";
-        
+
         src = ./.;
-        
+
         # Use pyproject.toml for build
         pyproject = true;
         build-system = [ python.pkgs.hatchling ];
-        
+
         # Dependencies from pyproject.toml
         dependencies = with python.pkgs; [
           typer
@@ -49,29 +50,33 @@
           pydantic
           loguru
         ];
-        
+
         # Runtime dependencies (timewarrior)
         buildInputs = [ pkgs.timewarrior ];
-        
+
         # Generate shell completions
-        nativeBuildInputs = [ pkgs.installShellFiles pkgs.zsh pkgs.fish ];
-        
+        nativeBuildInputs = [
+          pkgs.installShellFiles
+          pkgs.zsh
+          pkgs.fish
+        ];
+
         postInstall = ''
           # Generate completions by entering different shells
-          
+
           # Zsh completion - enter zsh shell and run completion generation
           echo '$out/bin/time-helper --show-completion > time-helper.zsh' | ${pkgs.zsh}/bin/zsh
           installShellCompletion --cmd time-helper --zsh time-helper.zsh
-          
+
           # Bash completion - use current bash environment  
           $out/bin/time-helper --show-completion > time-helper.bash
           installShellCompletion --cmd time-helper --bash time-helper.bash
-          
+
           # Fish completion - enter fish shell and run completion generation
           echo '$out/bin/time-helper --show-completion > time-helper.fish' | ${pkgs.fish}/bin/fish
           installShellCompletion --cmd time-helper --fish time-helper.fish
         '';
-        
+
         meta = {
           description = "Automated time tracking export and reporting tool";
           homepage = "https://codeberg.org/OpalBolt/time-helper";
@@ -80,8 +85,8 @@
 
       myShell = pkgs.mkShell {
         name = "python-dev-shell";
-        buildInputs = [ 
-          pythonEnv 
+        buildInputs = [
+          pythonEnv
           pkgs.uv # UV package manager
           pkgs.timewarrior # Time tracking tool
         ];
@@ -100,7 +105,7 @@
         default = time-helper;
         time-helper = time-helper;
       };
-      
+
       devShells.${system}.default = myShell;
     };
 }

@@ -1,0 +1,150 @@
+name: Build and Release Time Helper
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ created ]
+  # Allow manual triggering
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Run type checking
+        run: uv run mypy time_helper || echo "Type checking completed with warnings"
+
+  build-linux:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies and PyInstaller
+        run: |
+          uv sync --all-extras --dev
+          uv add --dev pyinstaller
+
+      - name: Create binary with PyInstaller
+        run: uv run pyinstaller --onefile --name time-helper time_helper/__main__.py
+
+      - name: Upload binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: time-helper-linux-x64
+          path: dist/time-helper
+
+      - name: Upload binary to release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/time-helper
+          asset_name: time-helper-linux-x64
+          asset_content_type: application/octet-stream
+
+  build-windows:
+    needs: test
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies and PyInstaller
+        run: |
+          uv sync --all-extras --dev
+          uv add --dev pyinstaller
+
+      - name: Create binary with PyInstaller
+        run: uv run pyinstaller --onefile --name time-helper time_helper/__main__.py
+
+      - name: Upload binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: time-helper-windows-x64.exe
+          path: dist/time-helper.exe
+
+      - name: Upload binary to release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/time-helper.exe
+          asset_name: time-helper-windows-x64.exe
+          asset_content_type: application/octet-stream
+
+  build-macos:
+    needs: test
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies and PyInstaller
+        run: |
+          uv sync --all-extras --dev
+          uv add --dev pyinstaller
+
+      - name: Create binary with PyInstaller
+        run: uv run pyinstaller --onefile --name time-helper time_helper/__main__.py
+
+      - name: Upload binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: time-helper-macos-x64
+          path: dist/time-helper
+
+      - name: Upload binary to release
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/time-helper
+          asset_name: time-helper-macos-x64
+          asset_content_type: application/octet-stream
