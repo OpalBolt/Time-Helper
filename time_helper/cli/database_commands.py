@@ -158,7 +158,7 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
     imported_count = 0
     for entry_date, entries in entries_by_date.items():
         try:
-            db.store_day_entries(datetime.fromisoformat(entry_date).date(), entries)
+            db.store_time_entries(entries, datetime.fromisoformat(entry_date).date())
             imported_count += len(entries)
             logger.debug(f"Imported {len(entries)} entries for {entry_date}")
         except Exception as e:
