@@ -10,7 +10,7 @@
 - [x] Task: Update `README.md` [15a6334]
     - [ ] Subtask: Update "Development Setup" section to reflect the Nix-first approach
     - [ ] Subtask: Update "Common Commands" section to use `nix run` patterns
-- [ ] Task: Conductor - User Manual Verification 'Documentation Standards' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Documentation Standards' (Protocol in workflow.md)
 
 ## Phase 2: Nix Flake Implementation
 - [ ] Task: Expose `time-helper` as a Nix app
