@@ -50,38 +50,38 @@ Do not use `uv` or direct Python commands unless explicitly debugging the Nix en
 ## Common Commands
 
 ### Running the Application
-Use `uv run` to execute the CLI during development:
+Use `nix run` to execute the CLI during development:
 
 ```bash
-uv run time-helper [COMMAND]
+nix run .#time-helper -- [COMMAND]
 ```
 
 **Examples:**
-- Start timer: `uv run time-helper`
-- Stop timer: `uv run time-helper stop`
-- Generate report: `uv run time-helper report`
-- Import data: `uv run time-helper import-all`
+- Start timer: `nix run .#time-helper`
+- Stop timer: `nix run .#time-helper -- stop`
+- Generate report: `nix run .#time-helper -- report`
+- Import data: `nix run .#time-helper -- db import-all`
 
 ### Testing
-Run the test suite using `pytest`:
+Run the test suite using `nix`:
 
 ```bash
-pytest
+nix run .#tests
 ```
 
 ### Formatting & Linting
-The project uses `black` for formatting and `flake8` for linting (available in the nix shell).
+The project uses `black` and `flake8` via Nix:
 
 ```bash
-black .
-flake8
+nix run .#format
+nix run .#lint
 ```
 
 ## Database
 
 The application maintains a local SQLite database to cache and organize `timewarrior` data.
 - **Location:** Typically `~/.local/share/time-helper/time_helper.db` (Linux).
-- **Management:** Use `uv run time-helper db-status` or `import-all` to manage data.
+- **Management:** Use `nix run .#time-helper -- db status` or `db import-all` to manage data.
 
 ## Workflow
 

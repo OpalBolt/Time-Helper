@@ -14,34 +14,38 @@ Replaces manual timewarrior exports with automated weekly reports.
 ```bash
 # Setup (Nix + direnv)
 direnv allow
-uv run time-helper init
+
+# Initialize database
+nix run .#time-helper -- db init
 
 # Import existing timewarrior data (one-time)
-time-helper import-all
+nix run .#time-helper -- db import-all
 
 # Start timer (interactive)
-time-helper
+nix run .#time-helper
 # → Enter: client-name Working on project
 # → TAB completion available for existing tags!
 
 # Stop timer
-time-helper stop
+nix run .#time-helper -- stop
 
 # Generate weekly report
-time-helper report
+nix run .#time-helper -- report
 ```
 
 ## Core Commands
 
+All commands are executed via `nix run .#time-helper -- [COMMAND]`. You can alias this for convenience.
+
 | Command | Description |
 |---------|-------------|
-| `time-helper` | Start timer (interactive) |
-| `time-helper stop` | Stop current timer |
-| `time-helper report` | Generate weekly report |
-| `time-helper import-all` | Import all timewarrior data to database |
-| `time-helper db-status` | Show database statistics |
-| `time-helper su :week` | Quick summary |
-| `time-helper db-path` | Show database location |
+| `[no args]` | Start timer (interactive) |
+| `stop` | Stop current timer |
+| `report` | Generate weekly report |
+| `db import-all` | Import all timewarrior data to database |
+| `db status` | Show database statistics |
+| `su :week` | Quick summary |
+| `db path` | Show database location |
 
 ## Database Storage
 
