@@ -12,7 +12,7 @@
     - [ ] Subtask: Update "Common Commands" section to use `nix run` patterns
 - [x] Task: Conductor - User Manual Verification 'Documentation Standards' (Protocol in workflow.md)
 
-## Phase 2: Nix Flake Implementation
+## Phase 2: Nix Flake Implementation [checkpoint: 1731f02]
 - [x] Task: Expose `time-helper` as a Nix app [4152653]
     - [ ] Subtask: Edit `flake.nix` to define `apps.<system>.default` and `apps.<system>.time-helper`
     - [ ] Subtask: Verify `nix run .` and `nix run .#time-helper` execute the CLI
