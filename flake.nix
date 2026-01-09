@@ -24,6 +24,7 @@
           black # formatter
           flake8 # linter
           pytest # test runner
+          pytest-cov # coverage plugin
           # Core dependencies from pyproject.toml
           typer # CLI framework
           rich # Terminal formatting

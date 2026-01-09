@@ -100,6 +100,13 @@ def _remove_duplicate_entries(entries: List[TimeEntry]) -> List[TimeEntry]:
     return unique_entries
 
 
+def _parse_date_string(date_str: Optional[str]) -> Optional[date]:
+    """Parses a date string into a date object."""
+    if date_str:
+        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    return None
+
+
 @handle_timew_errors
 def export_week(
     week_offset: int = 0, year: Optional[int] = None, date_str: Optional[str] = None
@@ -161,6 +168,9 @@ def generate_report(
     year: Optional[int] = None,
     date_str: Optional[str] = None,
     use_cache: bool = True,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    tags: Optional[List[str]] = None,
 ) -> None:
     """Generate a detailed report for the specified week.
 
@@ -357,12 +367,37 @@ def create_report_commands() -> typer.Typer:
             "-d",
             help="Specific date within the week (YYYY-MM-DD format)",
         ),
+        start_date: Optional[str] = typer.Option(
+            None,
+            "--start-date",
+            help="Start date for the report (YYYY-MM-DD format)",
+        ),
+        end_date: Optional[str] = typer.Option(
+            None, "--end-date", help="End date for the report (YYYY-MM-DD format)"
+        ),
+        tags: Optional[str] = typer.Option(
+            None,
+            "--tags",
+            help="Comma-separated list of tags to filter by (e.g., 'tag1,tag2')",
+        ),
         use_cache: bool = typer.Option(
             True, "--cache/--no-cache", help="Use cached data from database"
         ),
     ) -> None:
         """Generate a detailed report for the specified week."""
-        generate_report(week_offset, year, date_str, use_cache)
+        # Convert comma-separated tags string to a list
+        tags_list = tags.split(",") if tags else None
+        parsed_start_date = _parse_date_string(start_date)
+        parsed_end_date = _parse_date_string(end_date)
+        generate_report(
+            week_offset=week_offset,
+            year=year,
+            date_str=date_str,
+            use_cache=use_cache,
+            start_date=parsed_start_date,
+            end_date=parsed_end_date,
+            tags=tags_list,
+        )
 
     @report_app.command("list-weeks")
     def list_weeks_command(
