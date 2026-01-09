@@ -6,7 +6,7 @@ This plan outlines the steps to add customization and output format options to t
 
 This phase focuses on adding `--start-date`, `--end-date`, and `--tags` options to the `time-helper report` command, allowing users to filter reports by date range and specific tags.
 
-- [~] Task: Update `time_helper/cli/report_commands.py` to add `--start-date`, `--end-date`, and `--tags` options to the `report` command.
+- [x] Task: Update `time_helper/cli/report_commands.py` to add `--start-date`, `--end-date`, and `--tags` options to the `report` command. [commit: 22ae517]
     - [ ] Write Tests: Add unit tests for `report_commands.py` to verify parsing of new CLI arguments and their default values.
     - [ ] Implement Feature: Modify the `report` command function to accept these new arguments.
 - [ ] Task: Modify `time_helper/database.py` to allow filtering of time entries by date range and tags.
