@@ -123,6 +123,18 @@
             ${pythonEnv}/bin/pytest
           ''}/bin/tests";
         };
+        lint = {
+          type = "app";
+          program = "${pkgs.writeShellScriptBin "lint" ''
+            ${pythonEnv}/bin/flake8
+          ''}/bin/lint";
+        };
+        format = {
+          type = "app";
+          program = "${pkgs.writeShellScriptBin "format" ''
+            ${pythonEnv}/bin/black .
+          ''}/bin/format";
+        };
       };
     };
 }
