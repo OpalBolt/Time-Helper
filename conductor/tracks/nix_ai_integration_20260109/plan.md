@@ -23,4 +23,4 @@
     - [ ] Subtask: Edit `flake.nix` to define `apps.<system>.lint` (wrapping `flake8`)
     - [ ] Subtask: Edit `flake.nix` to define `apps.<system>.format` (wrapping `black .`)
     - [ ] Subtask: Verify `nix run .#lint` and `nix run .#format` execute successfully
-- [ ] Task: Conductor - User Manual Verification 'Nix Flake Implementation' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Nix Flake Implementation' (Protocol in workflow.md)
