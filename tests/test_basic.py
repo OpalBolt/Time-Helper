@@ -23,10 +23,12 @@ def test_app_version():
 def test_import_main_module():
     """Test that we can import the main module without errors."""
     import time_helper
+
     assert time_helper is not None
 
 
 def test_import_cli_module():
     """Test that we can import the CLI module without errors."""
     from time_helper.cli import app
+
     assert app is not None

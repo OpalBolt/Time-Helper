@@ -20,7 +20,7 @@ def get_user_input(prompt: str) -> str:
     # Only enable readline if we're in a real terminal
     if not sys.stdin.isatty():
         return input(prompt)
-    
+
     try:
         # Set up basic readline for proper input handling
         readline.parse_and_bind("tab: complete")
@@ -38,13 +38,13 @@ def get_user_input(prompt: str) -> str:
 
 @handle_timew_errors
 def annotate_entry(
-    timespan: str = ":day", 
-    entry_id: Optional[int] = None, 
-    annotation: Optional[str] = None
+    timespan: str = ":day",
+    entry_id: Optional[int] = None,
+    annotation: Optional[str] = None,
 ) -> None:
     """
     Update the annotation for a time entry.
-    
+
     Args:
         timespan: The timespan to show entries for (e.g., :day, :week, :month)
         entry_id: The ID of the entry to annotate (if not provided, will prompt)
@@ -54,57 +54,65 @@ def annotate_entry(
     logger.debug(f"Fetching entries for timespan: {timespan}")
     result = run_timew_command(["export", timespan])
     entries = parse_timew_export(result.stdout)
-    
+
     if not entries:
         console.print(f"[yellow]No entries found for timespan: {timespan}[/yellow]")
         return
-    
+
     # Only display current entries if we need user input (interactive mode)
     if entry_id is None:
         _display_entries_table(entries)
-    
+
     # Get entry ID if not provided
     if entry_id is None:
         try:
             console.print("\n[bold cyan]Available entries shown above[/bold cyan]")
-            console.print("[dim]You can enter just an ID (e.g., '2') or ID with annotation (e.g., '2 Cable management')[/dim]")
-            
-            prompt_response = get_user_input("Enter the ID of the entry to annotate: ").strip()
-            
+            console.print(
+                "[dim]You can enter just an ID (e.g., '2') or ID with annotation (e.g., '2 Cable management')[/dim]"
+            )
+
+            prompt_response = get_user_input(
+                "Enter the ID of the entry to annotate: "
+            ).strip()
+
             if not prompt_response:
                 console.print("[yellow]No input provided. Exiting.[/yellow]")
                 return
-            
+
             # Try to parse "ID annotation" format (e.g., "2 Cable management")
-            parts = prompt_response.split(' ', 1)
+            parts = prompt_response.split(" ", 1)
             entry_id = int(parts[0])
-            
+
             # If annotation was provided along with ID, use it
             if len(parts) > 1 and annotation is None:
                 annotation = parts[1]
-                
+
         except ValueError:
-            console.print("[red]Invalid entry ID. Please enter a number (optionally followed by annotation).[/red]")
+            console.print(
+                "[red]Invalid entry ID. Please enter a number (optionally followed by annotation).[/red]"
+            )
             return
-    
+
     # Find the entry
     target_entry = None
     for entry in entries:
         if entry.id == entry_id:
             target_entry = entry
             break
-    
+
     if target_entry is None:
         console.print(f"[red]Entry with ID {entry_id} not found.[/red]")
         return
-    
+
     # Get annotation if not provided
     if annotation is None:
         current_annotation = target_entry.annotation or "—"
         console.print(f"\n[dim]Current annotation: {current_annotation}[/dim]")
-        
-        annotation = get_user_input(f"Enter new annotation for entry {entry_id}: ").strip()
-        
+
+        annotation = get_user_input(
+            f"Enter new annotation for entry {entry_id}: "
+        ).strip()
+
         if not annotation:
             console.print("[yellow]No annotation provided. Exiting.[/yellow]")
             return
@@ -112,14 +120,16 @@ def annotate_entry(
         # When annotation is provided directly, show the former annotation
         former_annotation = target_entry.annotation or "—"
         console.print(f"[dim]Former annotation: {former_annotation}[/dim]")
-    
+
     # Update the annotation using timewarrior annotate command
     # Format: timew annotate @<id> "<annotation>"
     annotate_cmd = ["annotate", f"@{entry_id}", annotation]
     run_timew_command(annotate_cmd)
-    
-    console.print(f"[green]✓ Updated annotation for entry {entry_id}: '{annotation}'[/green]")
-    
+
+    console.print(
+        f"[green]✓ Updated annotation for entry {entry_id}: '{annotation}'[/green]"
+    )
+
     # Show updated entry
     console.print("\n[bold]Updated entry:[/bold]")
     updated_result = run_timew_command(["export", timespan])
@@ -134,50 +144,43 @@ def _display_entries_table(entries: list[TimeEntry]) -> None:
     table = Table(title="Current Entries")
     table.add_column("ID", style="cyan", no_wrap=True)
     table.add_column("Start", style="magenta")
-    table.add_column("End", style="magenta") 
+    table.add_column("End", style="magenta")
     table.add_column("Duration", style="green")
     table.add_column("Tags", style="blue")
     table.add_column("Annotation", style="yellow")
-    
+
     for entry in entries:
         start_time = entry.parse_start().strftime("%H:%M")
-        
+
         if entry.end:
             end_time = entry.parse_end().strftime("%H:%M")
             duration = f"{entry.get_duration_hours():.2f}h"
         else:
             end_time = "Active"
             duration = f"{entry.get_duration_hours():.2f}h"
-            
+
         tags = ", ".join(entry.tags) if entry.tags else "—"
         annotation = entry.annotation or "—"
-        
-        table.add_row(
-            str(entry.id),
-            start_time,
-            end_time,
-            duration,
-            tags,
-            annotation
-        )
-    
+
+        table.add_row(str(entry.id), start_time, end_time, duration, tags, annotation)
+
     console.print(table)
 
 
 def _display_single_entry(entry: TimeEntry) -> None:
     """Display a single entry."""
     start_time = entry.parse_start().strftime("%H:%M")
-    
+
     if entry.end:
         end_time = entry.parse_end().strftime("%H:%M")
         duration = f"{entry.get_duration_hours():.2f}h"
     else:
         end_time = "Active"
         duration = f"{entry.get_duration_hours():.2f}h"
-        
+
     tags = ", ".join(entry.tags) if entry.tags else "—"
     annotation = entry.annotation or "—"
-    
+
     console.print(f"ID: {entry.id}")
     console.print(f"Time: {start_time} - {end_time}")
     console.print(f"Duration: {duration}")
@@ -197,9 +200,9 @@ def handle_annotate_args(args: Optional[list[str]]) -> None:
         # No arguments - interactive mode with default timespan
         annotate_entry(":day", None, None)
         return
-    
+
     # Check if first argument looks like a timespan (starts with :)
-    if args[0].startswith(':'):
+    if args[0].startswith(":"):
         # Timespan mode: interactive with specified timespan
         timespan = args[0]
         annotate_entry(timespan, None, None)
@@ -211,5 +214,9 @@ def handle_annotate_args(args: Optional[list[str]]) -> None:
             annotation = " ".join(annotation_parts) if annotation_parts else None
             annotate_entry(":day", entry_id, annotation)
         except ValueError:
-            console.print(f"[red]Error: '{args[0]}' is not a valid entry ID or timespan[/red]")
-            console.print("[dim]Use a number for entry ID or :day, :week, etc. for timespan[/dim]")
+            console.print(
+                f"[red]Error: '{args[0]}' is not a valid entry ID or timespan[/red]"
+            )
+            console.print(
+                "[dim]Use a number for entry ID or :day, :week, etc. for timespan[/dim]"
+            )

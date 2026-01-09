@@ -1,0 +1,8 @@
+{
+  "track_id": "nix_ai_integration_20260109",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-01-09T00:00:00Z",
+  "updated_at": "2026-01-09T00:00:00Z",
+  "description": "Ensure that Nix is thought into all processes and that AI systems understand how to build, test and run the artifacts created by this project"
+}

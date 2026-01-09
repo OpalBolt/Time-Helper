@@ -19,7 +19,7 @@
 - [x] Task: Expose test suite as a Nix app [77e2ed2]
     - [ ] Subtask: Edit `flake.nix` to define `apps.<system>.tests` (wrapping `pytest`)
     - [ ] Subtask: Verify `nix run .#tests` executes the test suite
-- [ ] Task: Expose linting and formatting as Nix apps
+- [~] Task: Expose linting and formatting as Nix apps
     - [ ] Subtask: Edit `flake.nix` to define `apps.<system>.lint` (wrapping `flake8`)
     - [ ] Subtask: Edit `flake.nix` to define `apps.<system>.format` (wrapping `black .`)
     - [ ] Subtask: Verify `nix run .#lint` and `nix run .#format` execute successfully
