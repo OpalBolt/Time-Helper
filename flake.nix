@@ -107,5 +107,16 @@
       };
 
       devShells.${system}.default = myShell;
+
+      apps.${system} = {
+        default = {
+          type = "app";
+          program = "${time-helper}/bin/time-helper";
+        };
+        time-helper = {
+          type = "app";
+          program = "${time-helper}/bin/time-helper";
+        };
+      };
     };
 }
