@@ -16,7 +16,7 @@
 - [x] Task: Expose `time-helper` as a Nix app [4152653]
     - [ ] Subtask: Edit `flake.nix` to define `apps.<system>.default` and `apps.<system>.time-helper`
     - [ ] Subtask: Verify `nix run .` and `nix run .#time-helper` execute the CLI
-- [ ] Task: Expose test suite as a Nix app
+- [x] Task: Expose test suite as a Nix app [77e2ed2]
     - [ ] Subtask: Edit `flake.nix` to define `apps.<system>.tests` (wrapping `pytest`)
     - [ ] Subtask: Verify `nix run .#tests` executes the test suite
 - [ ] Task: Expose linting and formatting as Nix apps
