@@ -117,6 +117,12 @@
           type = "app";
           program = "${time-helper}/bin/time-helper";
         };
+        tests = {
+          type = "app";
+          program = "${pkgs.writeShellScriptBin "tests" ''
+            ${pythonEnv}/bin/pytest
+          ''}/bin/tests";
+        };
       };
     };
 }
