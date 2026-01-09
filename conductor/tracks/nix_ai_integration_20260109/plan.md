@@ -4,7 +4,7 @@
 - [x] Task: Update `GEMINI.md` with Agent Protocols [74d79dd]
     - [ ] Subtask: Add a dedicated "Agent Protocols" section
     - [ ] Subtask: Document exact Nix command strings for build, test, and run
-- [ ] Task: Update `conductor/workflow.md`
+- [x] Task: Update `conductor/workflow.md` [b07d32f]
     - [ ] Subtask: Update "Development Commands" section to mandate Nix-based commands
     - [ ] Subtask: Remove or update references to `uv run` where they conflict with the new standard
 - [ ] Task: Update `README.md`
