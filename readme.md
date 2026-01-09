@@ -47,6 +47,13 @@ All commands are executed via `nix run .#time-helper -- [COMMAND]`. You can alia
 | `su :week` | Quick summary |
 | `db path` | Show database location |
 
+### Building the Application
+To build the `time-helper` application and generate a standalone executable, use:
+```bash
+nix build .#time-helper
+```
+The resulting executable will be available in `result/bin/time-helper`.
+
 ## Database Storage
 
 The database is stored in a central location:
