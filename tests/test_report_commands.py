@@ -26,6 +26,7 @@ def test_generate_command_start_date(mock_generate_report):
         start_date=date(2025, 1, 1),
         end_date=None,
         tags=None,
+        output_format="terminal",
     )
     assert (
         result.exit_code == 0
@@ -46,6 +47,7 @@ def test_generate_command_end_date(mock_generate_report):
         start_date=None,
         end_date=date(2025, 1, 7),
         tags=None,
+        output_format="terminal",
     )
     assert result.exit_code == 0
 
@@ -64,6 +66,7 @@ def test_generate_command_tags(mock_generate_report):
         start_date=None,
         end_date=None,
         tags=["tag1", "tag2"],
+        output_format="terminal",
     )
     assert result.exit_code == 0
 
@@ -93,5 +96,24 @@ def test_generate_command_all_new_options(mock_generate_report):
         start_date=date(2025, 1, 1),
         end_date=date(2025, 1, 7),
         tags=["tagA", "tagB", "tagC"],
+        output_format="terminal",
+    )
+    assert result.exit_code == 0
+
+@patch("time_helper.cli.report_commands.generate_report")
+def test_generate_command_format(mock_generate_report):
+    """Test that the 'generate' command correctly passes --format."""
+    result = runner.invoke(
+        app, ["report", "generate", "--format", "markdown", "--no-cache"]
+    )
+    mock_generate_report.assert_called_once_with(
+        week_offset=0,
+        year=None,
+        date_str=None,
+        use_cache=False,
+        start_date=None,
+        end_date=None,
+        tags=None,
+        output_format="markdown",
     )
     assert result.exit_code == 0

@@ -171,6 +171,7 @@ def generate_report(
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
     tags: Optional[List[str]] = None,
+    output_format: str = "terminal",
 ) -> None:
     """Generate a detailed report for the specified week or date range.
 
@@ -182,9 +183,10 @@ def generate_report(
         start_date: Custom start date
         end_date: Custom end date
         tags: List of tags to filter by
+        output_format: Desired output format (terminal, markdown, csv)
     """
     logger.info(
-        f"Generating report: offset={week_offset}, year={year}, date={date_str}, cache={use_cache}, range={start_date}-{end_date}, tags={tags}"
+        f"Generating report: offset={week_offset}, year={year}, date={date_str}, cache={use_cache}, range={start_date}-{end_date}, tags={tags}, format={output_format}"
     )
 
     db = Database()
@@ -411,6 +413,13 @@ def create_report_commands() -> typer.Typer:
             "--tags",
             help="Comma-separated list of tags to filter by (e.g., 'tag1,tag2')",
         ),
+        output_format: str = typer.Option(
+            "terminal",
+            "--format",
+            "-f",
+            help="Output format for the report (terminal, markdown, csv)",
+            rich_help_panel="Report Options",
+        ),
         use_cache: bool = typer.Option(
             True, "--cache/--no-cache", help="Use cached data from database"
         ),
@@ -428,6 +437,7 @@ def create_report_commands() -> typer.Typer:
             start_date=parsed_start_date,
             end_date=parsed_end_date,
             tags=tags_list,
+            output_format=output_format,
         )
 
     @report_app.command("list-weeks")
