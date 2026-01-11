@@ -102,18 +102,26 @@ class Database:
                     ),
                 )
 
-    def get_time_entries(self, start_date: date, end_date: date) -> List[TimeEntry]:
-        """Get time entries for a date range."""
+    def get_time_entries(
+        self, start_date: date, end_date: date, tags: Optional[List[str]] = None
+    ) -> List[TimeEntry]:
+        """Get time entries for a date range, optionally filtered by tags."""
+        query = """
+            SELECT id, start_time, end_time, tag, annotation, date
+            FROM time_entries
+            WHERE date BETWEEN ? AND ?
+        """
+        params = [start_date.isoformat(), end_date.isoformat()]
+
+        if tags:
+            placeholders = ",".join("?" * len(tags))
+            query += f" AND tag IN ({placeholders})"
+            params.extend(tags)
+
+        query += " ORDER BY date, start_time"
+
         with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.execute(
-                """
-                SELECT id, start_time, end_time, tag, annotation, date
-                FROM time_entries
-                WHERE date BETWEEN ? AND ?
-                ORDER BY date, start_time
-            """,
-                (start_date.isoformat(), end_date.isoformat()),
-            )
+            cursor = conn.execute(query, params)
 
             entries = []
             for row in cursor.fetchall():
