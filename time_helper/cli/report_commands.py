@@ -168,43 +168,59 @@ def generate_report(
     year: Optional[int] = None,
     date_str: Optional[str] = None,
     use_cache: bool = True,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
     tags: Optional[List[str]] = None,
 ) -> None:
-    """Generate a detailed report for the specified week.
+    """Generate a detailed report for the specified week or date range.
 
     Args:
         week_offset: Week offset from current week (0=current, -1=last week, etc.)
         year: Year for the week (defaults to current year)
         date_str: Specific date within the week (YYYY-MM-DD format)
         use_cache: Use cached data from database
+        start_date: Custom start date
+        end_date: Custom end date
+        tags: List of tags to filter by
     """
     logger.info(
-        f"Generating report: offset={week_offset}, year={year}, date={date_str}, cache={use_cache}"
+        f"Generating report: offset={week_offset}, year={year}, date={date_str}, cache={use_cache}, range={start_date}-{end_date}, tags={tags}"
     )
 
     db = Database()
     week_utils = WeekUtils()
     report_gen = ReportGenerator()
 
-    # Determine the target week
-    target_date = _determine_target_week(date_str, week_offset, year)
+    # Determine report date range
+    if start_date:
+        report_start = start_date
+    else:
+        # Use week logic
+        target_date = _determine_target_week(date_str, week_offset, year)
+        report_start = week_utils.get_week_start(target_date)
 
-    week_start = week_utils.get_week_start(target_date)
-    week_dates = week_utils.get_week_dates(week_start)
+    if end_date:
+        report_end = end_date
+    else:
+        report_end = report_start + timedelta(days=6)
+
+    # Calculate dates to process (for export)
+    report_dates = []
+    curr_date = report_start
+    while curr_date <= report_end:
+        report_dates.append(curr_date)
+        curr_date += timedelta(days=1)
 
     # Try to load from cache first if enabled
     all_entries: List[TimeEntry] = []
 
     if use_cache:
         logger.debug("Attempting to load from cache")
-        week_end = week_start + timedelta(days=6)
-        cached_entries = db.get_time_entries(week_start, week_end)
+        cached_entries = db.get_time_entries(report_start, report_end, tags=tags)
         if cached_entries:
             all_entries = cached_entries
             rprint(
-                f"[blue]📋 Using cached data for week of {week_start.strftime('%B %d, %Y')}...[/blue]"
+                f"[blue]📋 Using cached data for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}...[/blue]"
             )
         else:
             logger.debug("No cached data found")
@@ -212,24 +228,26 @@ def generate_report(
     if not all_entries:
         # Export directly from timewarrior
         rprint(
-            f"[blue]📤 Exporting data directly from timewarrior for week of {week_start.strftime('%B %d, %Y')}...[/blue]"
+            f"[blue]📤 Exporting data directly from timewarrior for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}...[/blue]"
         )
 
-        for day_date in week_dates:
+        exported_entries = []
+        for day_date in report_dates:
             day_entries = _export_day_data(day_date)
-            all_entries.extend(day_entries)
+            exported_entries.extend(day_entries)
 
-        rprint("[green]✓ Export complete![/green]\n")
-
+        if exported_entries:
+            rprint("[green]✓ Export complete![/green]\n")
+        
         # Remove duplicate entries
-        all_entries = _remove_duplicate_entries(all_entries)
+        exported_entries = _remove_duplicate_entries(exported_entries)
 
         # Store in cache by grouping entries by date
         if use_cache:
             try:
                 # Group entries by date and store them
                 entries_by_date = {}
-                for entry in all_entries:
+                for entry in exported_entries:
                     entry_date = entry.date or entry.parse_start().date()
                     if entry_date not in entries_by_date:
                         entries_by_date[entry_date] = []
@@ -240,18 +258,31 @@ def generate_report(
                     db.store_time_entries(day_entries, entry_date)
 
                 logger.info("Stored entries in cache")
+                
+                # Now re-fetch from cache to apply filters correctly
+                all_entries = db.get_time_entries(report_start, report_end, tags=tags)
+                
             except Exception as e:
                 logger.error(f"Failed to cache entries: {e}")
                 rprint(f"[yellow]Warning: Could not cache data: {e}[/yellow]")
+                # If cache failed, use exported entries but filter manually
+                all_entries = exported_entries
+                if tags:
+                     all_entries = [e for e in all_entries if any(t in tags for t in e.tags)]
+        else:
+            # No cache, use exported entries filtered manually
+            all_entries = exported_entries
+            if tags:
+                all_entries = [e for e in all_entries if any(t in tags for t in e.tags)]
 
     if not all_entries:
         rprint(
-            f"[yellow]No time entries found for week of {week_start.strftime('%B %d, %Y')}[/yellow]"
+            f"[yellow]No time entries found for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}[/yellow]"
         )
         return
 
     # Generate and display the report
-    weekly_report = report_gen.generate_weekly_report(all_entries, week_start)
+    weekly_report = report_gen.generate_report(all_entries, report_start, report_end, tags=tags)
     report_gen.print_weekly_report(weekly_report)
 
 

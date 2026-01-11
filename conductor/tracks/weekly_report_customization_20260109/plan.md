@@ -12,7 +12,7 @@ This phase focuses on adding `--start-date`, `--end-date`, and `--tags` options 
 - [x] Task: Modify `time_helper/database.py` to allow filtering of time entries by date range and tags. [commit: 7332ad9]
     - [x] Write Tests: Add unit tests for `database.py` to verify correct filtering logic for date ranges and tags when querying time entries.
     - [x] Implement Feature: Update database query methods to incorporate `start_date`, `end_date`, and `tags` for data retrieval.
-- [ ] Task: Integrate filtering into `time_helper/report_generator.py`.
+- [~] Task: Integrate filtering into `time_helper/report_generator.py`.
     - [ ] Write Tests: Add unit tests for `report_generator.py` to confirm that reports are generated correctly based on filtered data.
     - [ ] Implement Feature: Pass the new filtering parameters from the CLI command to the report generation logic.
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Implement Date Range and Tag Filtering' (Protocol in workflow.md)

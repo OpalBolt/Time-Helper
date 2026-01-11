@@ -16,10 +16,14 @@ class ReportGenerator:
     def __init__(self):
         self.console = Console()
 
-    def generate_weekly_report(
-        self, entries: List[TimeEntry], week_start: date
+    def generate_report(
+        self,
+        entries: List[TimeEntry],
+        start_date: date,
+        end_date: date,
+        tags: List[str] = None,
     ) -> WeeklyReport:
-        """Generate a comprehensive weekly report from time entries."""
+        """Generate a comprehensive report from time entries."""
 
         # Group entries by date and tag
         daily_data: Dict[date, Dict[str, List[TimeEntry]]] = defaultdict(
@@ -28,7 +32,7 @@ class ReportGenerator:
         weekly_data: Dict[str, List[TimeEntry]] = defaultdict(list)
 
         for entry in entries:
-            entry_date = entry.date or week_start  # Fallback to week_start if no date
+            entry_date = entry.date or start_date  # Fallback
             tag = entry.get_primary_tag()
 
             daily_data[entry_date][tag].append(entry)
@@ -78,18 +82,33 @@ class ReportGenerator:
             total_weekly_hours += total_hours
 
         return WeeklyReport(
-            week_start=week_start,
+            week_start=start_date,
             daily_reports=daily_reports,
             weekly_summaries=weekly_summaries,
             total_hours=total_weekly_hours,
+            end_date=end_date,
+            tags=tags,
         )
+
+    def generate_weekly_report(
+        self, entries: List[TimeEntry], week_start: date
+    ) -> WeeklyReport:
+        """Generate a comprehensive weekly report from time entries."""
+        from datetime import timedelta
+
+        return self.generate_report(entries, week_start, week_start + timedelta(days=6))
 
     def print_weekly_report(self, report: WeeklyReport) -> None:
         """Print a comprehensive weekly report with rich formatting."""
 
         # Header
-        title = f"Weekly Time Report - {report.get_week_range_string()}"
-        rprint(f"\n[bold blue]{title}[/bold blue]\n")
+        title = f"Time Report - {report.get_week_range_string()}"
+        rprint(f"\n[bold blue]{title}[/bold blue]")
+
+        if report.tags:
+            rprint(f"[dim]Filtered by tags: {', '.join(report.tags)}[/dim]")
+
+        rprint()
 
         # Daily reports
         for daily_report in report.get_sorted_daily_reports():

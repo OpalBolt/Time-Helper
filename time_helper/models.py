@@ -106,32 +106,46 @@ class DailyReport:
 
 @dataclass
 class WeeklyReport:
-    """Comprehensive weekly report."""
+    """Comprehensive time report (weekly or custom range)."""
 
     week_start: Date
     daily_reports: Dict[Date, DailyReport]
     weekly_summaries: Dict[str, TagSummary]
     total_hours: float
+    end_date: Optional[Date] = None
+    tags: Optional[List[str]] = None
+
+    @property
+    def start_date(self) -> Date:
+        """Alias for week_start for consistency."""
+        return self.week_start
 
     def get_week_range_string(self) -> str:
-        """Get formatted week range string."""
-        week_end = self.week_start
-        for i in range(6):
-            from datetime import timedelta
-
-            week_end = self.week_start + timedelta(days=i)
-            if self.week_start + timedelta(days=i) in self.daily_reports:
-                week_end = self.week_start + timedelta(days=i)
-
-        # Find actual week end from available data
+        """Get formatted date range string."""
+        start_str = self.start_date.strftime("%B %d")
+        
+        if self.end_date:
+            end_str = self.end_date.strftime("%B %d, %Y")
+            # If same year, don't repeat it in start
+            if self.start_date.year == self.end_date.year:
+                return f"{start_str} - {end_str}"
+            else:
+                return f"{self.start_date.strftime('%B %d, %Y')} - {end_str}"
+        
+        # Fallback to logic for standard week
+        week_end = self.start_date
+        # ... existing logic or simplified ...
+        # If we don't have explicit end_date, calculate it
         if self.daily_reports:
             week_end = max(self.daily_reports.keys())
         else:
             from datetime import timedelta
-
-            week_end = self.week_start + timedelta(days=6)
-
-        return f"Week of {self.week_start.strftime('%B %d, %Y')}"
+            week_end = self.start_date + timedelta(days=6)
+            
+        end_str = week_end.strftime("%B %d, %Y")
+        if self.start_date.year == week_end.year:
+             return f"{start_str} - {end_str}"
+        return f"{self.start_date.strftime('%B %d, %Y')} - {end_str}"
 
     def get_sorted_daily_reports(self) -> List[DailyReport]:
         """Get daily reports sorted by date."""
