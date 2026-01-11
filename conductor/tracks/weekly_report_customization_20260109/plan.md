@@ -2,7 +2,7 @@
 
 This plan outlines the steps to add customization and output format options to the weekly report generation in the `time-helper` CLI tool.
 
-## Phase 1: Implement Date Range and Tag Filtering
+## Phase 1: Implement Date Range and Tag Filtering [checkpoint: 8899374]
 
 This phase focuses on adding `--start-date`, `--end-date`, and `--tags` options to the `time-helper report` command, allowing users to filter reports by date range and specific tags.
 
@@ -15,7 +15,7 @@ This phase focuses on adding `--start-date`, `--end-date`, and `--tags` options 
 - [x] Task: Integrate filtering into `time_helper/report_generator.py`. [commit: b758baa]
     - [x] Write Tests: Add unit tests for `report_generator.py` to confirm that reports are generated correctly based on filtered data.
     - [x] Implement Feature: Pass the new filtering parameters from the CLI command to the report generation logic.
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Implement Date Range and Tag Filtering' (Protocol in workflow.md)
+- [~] Task: Conductor - User Manual Verification 'Phase 1: Implement Date Range and Tag Filtering' (Protocol in workflow.md)
 
 ## Phase 2: Add Markdown and CSV Output Formats
 
