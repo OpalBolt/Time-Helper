@@ -21,7 +21,7 @@ This phase focuses on adding `--start-date`, `--end-date`, and `--tags` options 
 
 This phase focuses on extending the `time-helper report` command to support `--format markdown` and `--format csv` options.
 
-- [ ] Task: Update `time_helper/cli/report_commands.py` to add `--format` option.
+- [x] Task: Update `time_helper/cli/report_commands.py` to add `--format` option. [commit: a6888b0]
     - [ ] Write Tests: Add unit tests for `report_commands.py` to verify parsing of the new `--format` argument.
     - [ ] Implement Feature: Modify the `report` command function to accept the `--format` argument.
 - [ ] Task: Implement Markdown output in `time_helper/report_generator.py`.
