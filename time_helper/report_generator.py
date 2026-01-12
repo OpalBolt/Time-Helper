@@ -284,3 +284,34 @@ class ReportGenerator:
             lines.append(f"**Total Hours: {report.total_hours:.2f} hours**")
 
         return "\n".join(lines)
+
+    def format_as_csv(self, report: WeeklyReport) -> str:
+        """Format the report as CSV."""
+        import io
+        import csv
+
+        output = io.StringIO()
+        fieldnames = ["Date", "Day", "Tag", "Hours", "Annotations"]
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+
+        writer.writeheader()
+        
+        for daily_report in report.get_sorted_daily_reports():
+            # Sort tags by hours (descending)
+            sorted_tags = sorted(
+                daily_report.tag_summaries.values(),
+                key=lambda x: x.total_hours,
+                reverse=True,
+            )
+
+            for tag_summary in sorted_tags:
+                annotations = "; ".join(tag_summary.get_formatted_annotations())
+                writer.writerow({
+                    "Date": daily_report.get_formatted_date(),
+                    "Day": daily_report.get_day_name(),
+                    "Tag": tag_summary.tag,
+                    "Hours": f"{tag_summary.total_hours:.2f}",
+                    "Annotations": annotations
+                })
+
+        return output.getvalue()
