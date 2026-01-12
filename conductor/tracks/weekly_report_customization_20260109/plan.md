@@ -24,9 +24,9 @@ This phase focuses on extending the `time-helper report` command to support `--f
 - [x] Task: Update `time_helper/cli/report_commands.py` to add `--format` option. [commit: a6888b0]
     - [ ] Write Tests: Add unit tests for `report_commands.py` to verify parsing of the new `--format` argument.
     - [ ] Implement Feature: Modify the `report` command function to accept the `--format` argument.
-- [ ] Task: Implement Markdown output in `time_helper/report_generator.py`.
-    - [ ] Write Tests: Add unit tests for `report_generator.py` to verify the structure and content of Markdown output.
-    - [ ] Implement Feature: Add a new function or extend existing logic to generate reports in Markdown format.
+- [x] Task: Implement Markdown output in `time_helper/report_generator.py`. [commit: a1da115]
+    - [x] Write Tests: Add unit tests for `report_generator.py` to verify the structure and content of Markdown output.
+    - [x] Implement Feature: Add a new function or extend existing logic to generate reports in Markdown format.
 - [ ] Task: Implement CSV output in `time_helper/report_generator.py`.
     - [ ] Write Tests: Add unit tests for `report_generator.py` to verify the structure and content of CSV output.
     - [ ] Implement Feature: Add a new function or extend existing logic to generate reports in CSV format.
