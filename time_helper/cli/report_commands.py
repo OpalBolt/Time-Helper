@@ -285,7 +285,16 @@ def generate_report(
 
     # Generate and display the report
     weekly_report = report_gen.generate_report(all_entries, report_start, report_end, tags=tags)
-    report_gen.print_weekly_report(weekly_report)
+    
+    if output_format == "markdown":
+        markdown = report_gen.format_as_markdown(weekly_report)
+        print(markdown)
+    elif output_format == "csv":
+        csv_output = report_gen.format_as_csv(weekly_report)
+        print(csv_output)
+    else:
+        # Default to terminal
+        report_gen.print_weekly_report(weekly_report)
 
 
 def list_weeks(count: int = 10) -> None:
@@ -424,7 +433,11 @@ def create_report_commands() -> typer.Typer:
             True, "--cache/--no-cache", help="Use cached data from database"
         ),
     ) -> None:
-        """Generate a detailed report for the specified week."""
+        """Generate a detailed report for the specified week or custom date range.
+        
+        You can filter by tags, specific dates, or week offsets. 
+        Reports can be output in different formats for sharing or data analysis.
+        """
         # Convert comma-separated tags string to a list
         tags_list = tags.split(",") if tags else None
         parsed_start_date = _parse_date_string(start_date)

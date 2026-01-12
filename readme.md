@@ -30,7 +30,14 @@ nix run .#time-helper
 nix run .#time-helper -- stop
 
 # Generate weekly report
-nix run .#time-helper -- report
+nix run .#time-helper -- report generate
+
+# Generate report for a custom range with tag filtering
+nix run .#time-helper -- report generate --start-date 2026-01-01 --end-date 2026-01-15 --tags work,admin
+
+# Export report to Markdown or CSV
+nix run .#time-helper -- report generate --format markdown
+nix run .#time-helper -- report generate --format csv
 ```
 
 ## Core Commands
@@ -41,7 +48,9 @@ All commands are executed via `nix run .#time-helper -- [COMMAND]`. You can alia
 |---------|-------------|
 | `[no args]` | Start timer (interactive) |
 | `stop` | Stop current timer |
-| `report` | Generate weekly report |
+| `report generate` | Generate detailed report (weekly or custom range) |
+| `report list-weeks` | List available weeks for reporting |
+| `report tags` | List all known tags and their totals |
 | `db import-all` | Import all timewarrior data to database |
 | `db status` | Show database statistics |
 | `su :week` | Quick summary |
