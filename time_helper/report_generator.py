@@ -217,3 +217,70 @@ class ReportGenerator:
 
         color_index = hash(tag) % len(colors)
         return colors[color_index]
+
+    def format_as_markdown(self, report: WeeklyReport) -> str:
+        """Format the report as Markdown."""
+        lines = []
+        
+        # Header
+        title = f"Time Report - {report.get_week_range_string()}"
+        lines.append(f"# {title}")
+        lines.append("")
+
+        if report.tags:
+            lines.append(f"> Filtered by tags: {', '.join(report.tags)}")
+            lines.append("")
+
+        # Daily reports
+        lines.append("## Daily Reports")
+        lines.append("")
+        
+        for daily_report in report.get_sorted_daily_reports():
+            day_header = f"{daily_report.get_day_name()} ({daily_report.get_formatted_date()})"
+            lines.append(f"### {day_header}")
+            lines.append("")
+            
+            if not daily_report.tag_summaries:
+                lines.append("*No time tracked*")
+                lines.append("")
+                continue
+
+            lines.append("| Tag | Hours | Annotations |")
+            lines.append("| :--- | :--- | :--- |")
+            
+            # Sort tags by hours (descending)
+            sorted_tags = sorted(
+                daily_report.tag_summaries.values(),
+                key=lambda x: x.total_hours,
+                reverse=True,
+            )
+
+            for tag_summary in sorted_tags:
+                annotations = ", ".join(tag_summary.get_formatted_annotations())
+                lines.append(f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {annotations} |")
+            
+            lines.append("")
+            lines.append(f"**Daily Total: {daily_report.total_hours:.2f} hours**")
+            lines.append("")
+
+        # Weekly summary
+        lines.append("## Weekly Summary")
+        lines.append("")
+        
+        if not report.weekly_summaries:
+            lines.append("*No time tracked this week*")
+        else:
+            lines.append("| Tag | Total Hours | Daily Breakdown |")
+            lines.append("| :--- | :--- | :--- |")
+            
+            for tag_summary in report.get_sorted_weekly_summaries():
+                # Calculate daily breakdown
+                daily_breakdown = self._get_daily_breakdown(
+                    tag_summary.tag, report.daily_reports
+                )
+                lines.append(f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {daily_breakdown} |")
+            
+            lines.append("")
+            lines.append(f"**Total Hours: {report.total_hours:.2f} hours**")
+
+        return "\n".join(lines)
