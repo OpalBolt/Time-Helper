@@ -27,9 +27,9 @@ This phase focuses on extending the `time-helper report` command to support `--f
 - [x] Task: Implement Markdown output in `time_helper/report_generator.py`. [commit: a1da115]
     - [x] Write Tests: Add unit tests for `report_generator.py` to verify the structure and content of Markdown output.
     - [x] Implement Feature: Add a new function or extend existing logic to generate reports in Markdown format.
-- [ ] Task: Implement CSV output in `time_helper/report_generator.py`.
-    - [ ] Write Tests: Add unit tests for `report_generator.py` to verify the structure and content of CSV output.
-    - [ ] Implement Feature: Add a new function or extend existing logic to generate reports in CSV format.
+- [x] Task: Implement CSV output in `time_helper/report_generator.py`. [commit: 7db1b20]
+    - [x] Write Tests: Add unit tests for `report_generator.py` to verify the structure and content of CSV output.
+    - [x] Implement Feature: Add a new function or extend existing logic to generate reports in CSV format.
 - [ ] Task: Update CLI help messages and documentation.
     - [ ] Write Tests: (Not applicable for documentation, but ensure CLI tests cover help output if possible.)
     - [ ] Implement Feature: Modify relevant docstrings or help text to reflect new options and formats.
