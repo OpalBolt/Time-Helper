@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 [project.scripts]
-time-helper = "time_helper.cli:app"
+time-helper = "time_helper.cli:main"
 
 [tool.uv]
 dev-dependencies = [

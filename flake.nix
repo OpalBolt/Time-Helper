@@ -121,7 +121,7 @@
         tests = {
           type = "app";
           program = "${pkgs.writeShellScriptBin "tests" ''
-            ${pythonEnv}/bin/pytest
+            ${pythonEnv}/bin/pytest "$@"
           ''}/bin/tests";
         };
         lint = {

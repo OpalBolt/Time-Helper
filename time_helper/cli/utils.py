@@ -10,6 +10,7 @@ from rich import print as rprint
 
 from ..models import TimeEntry
 from ..logging_config import get_logger
+from ..exceptions import TimewarriorError
 
 logger = get_logger(__name__)
 console = Console()
@@ -46,8 +47,9 @@ def run_timew_command(
         logger.error("Timewarrior (timew) not found in PATH")
         raise
     except subprocess.CalledProcessError as e:
-        logger.error(f"Command failed: {e.stderr}")
-        raise
+        # Use stdout if stderr is empty (sometimes timewarrior prints errors to stdout)
+        error_msg = e.stderr.strip() or e.stdout.strip() or "Unknown error"
+        raise TimewarriorError(error_msg, original_error=e)
 
 
 def parse_timew_export(output: str) -> List[TimeEntry]:
@@ -133,29 +135,31 @@ def handle_timew_errors(func):
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except subprocess.CalledProcessError as e:
-            if "No data found" in e.stderr:
+        except (subprocess.CalledProcessError, TimewarriorError) as e:
+            # Get error message regardless of exception type
+            if isinstance(e, TimewarriorError):
+                error_msg = str(e)
+            else:
+                error_msg = e.stderr if e.stderr else str(e)
+
+            if "No data found" in error_msg:
                 rprint("[yellow]No data found for the specified timespan[/yellow]")
-            elif "There is no active time tracking" in e.stderr:
+            elif "There is no active time tracking" in error_msg:
                 rprint("[yellow]No active timer to stop[/yellow]")
-            elif "Nothing to undo" in e.stderr:
+            elif "Nothing to undo" in error_msg:
                 rprint("[yellow]Nothing to undo - no recent operations found[/yellow]")
-            elif "You cannot overlap intervals" in e.stderr:
+            elif "You cannot overlap intervals" in error_msg:
                 rprint(
                     "[yellow]⚠️  Time overlap detected - the specified start time conflicts with existing intervals[/yellow]"
                 )
                 rprint(
                     "[dim]Hint: Use 'timew stop' to end current tracking, or choose a different start time[/dim]"
                 )
-            else:
-                logger.error(f"Timewarrior error: {e.stderr}")
-                rprint(f"[red]Error: {e.stderr}[/red]")
             raise
         except FileNotFoundError:
-            rprint(
-                "[red]Error: 'timew' command not found. Make sure timewarrior is installed.[/red]"
+            raise TimeHelperError(
+                "'timew' command not found. Make sure timewarrior is installed."
             )
-            raise
 
     return wrapper
 

@@ -16,6 +16,7 @@ from .utils import (
 )
 from ..database import Database
 from ..logging_config import get_logger
+from ..exceptions import TimewarriorError, TimeHelperError
 
 logger = get_logger(__name__)
 
@@ -94,8 +95,7 @@ def start_timer(args: Optional[List[str]] = None) -> None:
         user_input = get_user_input_with_completion(prompt_text, available_tags).strip()
 
         if not user_input:
-            rprint("[red]Error: Tag cannot be empty[/red]")
-            raise typer.Exit(1)
+            raise TimeHelperError("Tag cannot be empty")
 
         # Parse interactive input into args
         args = user_input.split()
@@ -113,8 +113,7 @@ def start_timer(args: Optional[List[str]] = None) -> None:
 
     # First argument is the tag, rest are annotation
     if not filtered_args:
-        rprint("[red]Error: No tag provided[/red]")
-        raise typer.Exit(1)
+        raise TimeHelperError("No tag provided")
 
     tag = filtered_args[0].lower()  # Normalize tag to lowercase
     annotation = " ".join(filtered_args[1:]) if len(filtered_args) > 1 else ""
@@ -137,8 +136,9 @@ def start_timer(args: Optional[List[str]] = None) -> None:
             run_timew_command(test_cmd, check=True)
             # If it succeeds, no overlap - use the command as-is
             cmd_args.append(time_arg)
-        except subprocess.CalledProcessError as e:
-            if "You cannot overlap intervals" in e.stderr:
+        except TimewarriorError as e:
+            error_msg = str(e)
+            if "You cannot overlap intervals" in error_msg:
                 # There's an overlap - ask for confirmation before using :adjust
                 rprint(
                     f"[yellow]⚠️  The start time {time_arg} would overlap with existing intervals.[/yellow]"
@@ -207,7 +207,8 @@ def start_timer(args: Optional[List[str]] = None) -> None:
                         # Limit to first 8 entries to avoid overwhelming output
                         entries_to_show = list(reversed(impacted_entries))[:8]
                         display_entries(
-                            entries_to_show, "Entries that would be impacted:"
+                            entries_to_show,
+                            "Entries that would be impacted:",
                         )
 
                         if len(impacted_entries) > 8:
@@ -233,16 +234,22 @@ def start_timer(args: Optional[List[str]] = None) -> None:
                 else:
                     rprint("[yellow]Timer start cancelled.[/yellow]")
                     return
+            elif "cannot be set in the future" in error_msg:
+                # Provide a hint for future time
+                raise TimeHelperError(
+                    f"{error_msg}\n[yellow]Hint: Provide a past or current time.[/yellow]"
+                )
             else:
-                # Some other error - re-raise to be handled by decorator
+                # Some other error - re-raise
                 raise
 
     logger.debug(f"Running start command: {cmd_args}")
 
     try:
         result = run_timew_command(cmd_args, check=True)
-    except subprocess.CalledProcessError as e:
-        if "You cannot overlap intervals" in e.stderr:
+    except TimewarriorError as e:
+        error_msg = str(e)
+        if "You cannot overlap intervals" in error_msg:
             # Provide helpful guidance for overlaps that couldn't be auto-resolved
             rprint("[yellow]⚠️  Cannot start timer - time overlap detected[/yellow]")
             rprint(

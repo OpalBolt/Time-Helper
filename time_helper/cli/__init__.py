@@ -1,7 +1,7 @@
-"""Main CLI entry point for time-helper application."""
-
+import sys
 import typer
 from typing import Optional, List
+from rich.console import Console
 
 from .timer_commands import (
     create_timer_commands,
@@ -14,6 +14,7 @@ from .report_commands import create_report_commands
 from .database_commands import create_database_commands
 from .annotate_commands import undo_annotation, handle_annotate_args
 from ..logging_config import setup_logging, get_logger
+from ..exceptions import TimeHelperError
 
 # Initialize logging first (silent by default)
 setup_logging(verbosity=0)  # Will be overridden by callback if needed
@@ -38,9 +39,10 @@ def main_callback(
         "--verbose",
         count=True,
         help="Increase verbosity (-v for info, -vv for debug)",
+        is_eager=True,
     ),
     debug: bool = typer.Option(
-        False, "--debug", help="Enable debug logging (same as -vv)"
+        False, "--debug", help="Enable debug logging (same as -vv)", is_eager=True
     ),
     ctx: typer.Context = typer.Context,
 ) -> None:
@@ -145,5 +147,29 @@ def uan_command() -> None:
     undo_annotation()
 
 
+def main():
+    """Main entry point with global error handling."""
+    try:
+        app()
+    except TimeHelperError as e:
+        # Always print clean error for known application errors
+        console = Console()
+        console.print(f"[red]Error: {e}[/red]")
+        # Log the full traceback at DEBUG level for developers
+        logger.debug(f"Application error: {e}", exc_info=True)
+        sys.exit(1)
+    except Exception:
+        # Unexpected errors still show traceback in debug mode for easier development
+        if "--debug" in sys.argv:
+            raise
+        logger.exception("An unexpected error occurred")
+        console = Console()
+        console.print("[bold red]An unexpected error occurred.[/bold red]")
+        console.print(
+            "[dim]Use --debug for more information or check the log file.[/dim]"
+        )
+        sys.exit(1)
+
+
 if __name__ == "__main__":
-    app()
+    main()
