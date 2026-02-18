@@ -51,7 +51,7 @@ def create_config_commands() -> typer.Typer:
         """Set the active color scheme."""
         try:
             config = Config.load()
-            # This will validate the scheme name
+            # This will validate the scheme name via Pydantic
             config.color_scheme = scheme
             config.save()
             console.print(
@@ -61,6 +61,13 @@ def create_config_commands() -> typer.Typer:
             logger.info(f"Color scheme changed to: {scheme}")
         except ValueError as e:
             console.print(f"[red]Error:[/red] {str(e)}")
+            raise typer.Exit(1)
+        except OSError as e:
+            logger.error("Failed to save configuration: %s", e)
+            console.print(
+                "[red]Error:[/red] Failed to write configuration file. "
+                "Check file permissions and try again."
+            )
             raise typer.Exit(1)
 
     @app.command("get-scheme")
@@ -97,9 +104,17 @@ def create_config_commands() -> typer.Typer:
             console.print("Cancelled.")
             raise typer.Exit(0)
 
-        config = Config()  # Create default config
-        config.save()
-        console.print("[green]✓ Configuration reset to defaults[/green]")
-        logger.info("Configuration reset to defaults")
+        try:
+            config = Config()  # Create default config
+            config.save()
+            console.print("[green]✓ Configuration reset to defaults[/green]")
+            logger.info("Configuration reset to defaults")
+        except OSError as e:
+            logger.error("Failed to reset configuration to defaults: %s", e)
+            console.print(
+                "[red]Error:[/red] Failed to write configuration file. "
+                "Check file permissions and try again."
+            )
+            raise typer.Exit(1)
 
     return app

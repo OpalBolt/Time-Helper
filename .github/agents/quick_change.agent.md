@@ -1,6 +1,6 @@
 ---
 name: quick_change
-description: Handles small changes by creating Jira issue, branch, imgit plementing changes, and opening PR
+description: Handles small changes by creating Jira issue, branch, implementing changes, and opening PR
 argument-hint: A description of the small change or fix to implement
 # tools property omitted to allow all enabled tools (including MCP for Jira/GitHub)
 ---
