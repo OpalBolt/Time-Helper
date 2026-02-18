@@ -27,7 +27,7 @@ def setup_logging(verbosity: int = 0) -> None:
         logger.add(
             sys.stderr,
             level=console_level,
-            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",  # noqa: E501
             colorize=True,
             enqueue=True,
         )
@@ -51,7 +51,7 @@ def setup_logging(verbosity: int = 0) -> None:
         logger.add(
             str(log_file),
             level="DEBUG",  # Always log debug to file
-            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
+            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",  # noqa: E501
             rotation="10 MB",
             retention="1 month",
             compression="gz",
@@ -60,14 +60,16 @@ def setup_logging(verbosity: int = 0) -> None:
 
         # Only log initialization messages if verbosity is enabled
         if verbosity > 0:
-            logger.info(f"Logging initialized at console level {console_level}")
+            logger.info(
+                f"Logging initialized at console level {console_level}"
+            )  # noqa: E501
             logger.debug(f"Log file: {log_file}")
     except (PermissionError, OSError):
-        # If we can't create the log directory (e.g., in Nix build environment),
+        # If we can't create the log directory (e.g., in Nix build environment),  # noqa: E501
         # just skip file logging and continue
         if verbosity > 0:
             logger.info(
-                f"Logging initialized at console level {console_level} (file logging disabled)"
+                f"Logging initialized at console level {console_level} (file logging disabled)"  # noqa: E501
             )
 
 

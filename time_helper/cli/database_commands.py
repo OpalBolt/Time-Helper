@@ -53,11 +53,20 @@ def _parse_entries_by_date(
             logger.warning(f"Failed to parse entry: {e}")
             rprint(f"[yellow]Warning: Failed to parse entry: {e}[/yellow]")
 
-    logger.debug(f"Parsed {total_entries} entries across {len(entries_by_date)} days")
-    return entries_by_date, total_entries, earliest_date or "", latest_date or ""
+    logger.debug(
+        f"Parsed {total_entries} entries across {len(entries_by_date)} days"
+    )  # noqa: E501
+    return (
+        entries_by_date,
+        total_entries,
+        earliest_date or "",
+        latest_date or "",
+    )  # noqa: E501
 
 
-def _get_tag_counts(entries_by_date: Dict[str, List[TimeEntry]]) -> Dict[str, int]:
+def _get_tag_counts(
+    entries_by_date: Dict[str, List[TimeEntry]],
+) -> Dict[str, int]:  # noqa: E501
     """Count occurrences of each tag.
 
     Args:
@@ -101,13 +110,17 @@ def _display_dry_run_summary(
 
     # Show top 10 tags
     if tag_counts:
-        sorted_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:10]
+        sorted_tags = sorted(
+            tag_counts.items(), key=lambda x: x[1], reverse=True
+        )[  # noqa: E501
+            :10
+        ]  # noqa: E501
         rprint("\n[bold blue]Top 10 tags:[/bold blue]")
         for tag, count in sorted_tags:
             rprint(f"  {tag}: {count} entries")
 
     rprint(
-        f"\n[yellow]Use 'import-all' without --dry-run to perform the actual import.[/yellow]"
+        "\n[yellow]Use 'import-all' without --dry-run to perform the actual import.[/yellow]"  # noqa: E501
     )
 
 
@@ -131,10 +144,10 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
 
             if existing_count > 0:
                 rprint(
-                    f"[yellow]Database already contains {existing_count:,} entries.[/yellow]"
+                    f"[yellow]Database already contains {existing_count:,} entries.[/yellow]"  # noqa: E501
                 )
                 rprint(
-                    "[yellow]Use --force to import anyway, or --dry-run to see what would be imported.[/yellow]"
+                    "[yellow]Use --force to import anyway, or --dry-run to see what would be imported.[/yellow]"  # noqa: E501
                 )
                 return
 
@@ -161,9 +174,12 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
         return
 
     # Parse entries and group by date
-    entries_by_date, total_entries, earliest_date, latest_date = _parse_entries_by_date(
-        data
-    )
+    (
+        entries_by_date,
+        total_entries,
+        earliest_date,
+        latest_date,
+    ) = _parse_entries_by_date(data)
 
     rprint(f"[green]Processing {len(data)} entries...[/green]")
 
@@ -177,7 +193,9 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
     imported_count = 0
     for entry_date, entries in entries_by_date.items():
         try:
-            db.store_time_entries(entries, datetime.fromisoformat(entry_date).date())
+            db.store_time_entries(
+                entries, datetime.fromisoformat(entry_date).date()
+            )  # noqa: E501
             imported_count += len(entries)
             logger.debug(f"Imported {len(entries)} entries for {entry_date}")
         except Exception as e:
@@ -186,7 +204,7 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
 
     rprint("\n[bold green]✓ Import complete![/bold green]")
     rprint(
-        f"[green]Successfully imported {imported_count:,} out of {total_entries:,} entries[/green]"
+        f"[green]Successfully imported {imported_count:,} out of {total_entries:,} entries[/green]"  # noqa: E501
     )
     rprint(f"[green]Date range: {earliest_date} to {latest_date}[/green]")
     rprint(f"[dim]Database location: {db.db_path}[/dim]")
@@ -223,7 +241,9 @@ def database_status() -> None:
             total_entries = cursor.fetchone()[0]
 
             # Date range
-            cursor = conn.execute("SELECT MIN(date), MAX(date) FROM time_entries")
+            cursor = conn.execute(
+                "SELECT MIN(date), MAX(date) FROM time_entries"
+            )  # noqa: E501
             date_range = cursor.fetchone()
 
             # Total hours
@@ -231,34 +251,40 @@ def database_status() -> None:
             total_hours = cursor.fetchone()[0] or 0
 
             # Unique tags
-            cursor = conn.execute("SELECT COUNT(DISTINCT tag) FROM time_entries")
+            cursor = conn.execute(
+                "SELECT COUNT(DISTINCT tag) FROM time_entries"
+            )  # noqa: E501
             unique_tags = cursor.fetchone()[0]
 
             # Recent activity (last 30 days)
             cursor = conn.execute(
                 """
-                SELECT COUNT(*) FROM time_entries 
+                SELECT COUNT(*) FROM time_entries
                 WHERE date >= date('now', '-30 days')
             """
             )
             recent_entries = cursor.fetchone()[0]
 
-        rprint(f"[bold blue]Database Status[/bold blue]")
+        rprint("[bold blue]Database Status[/bold blue]")
         rprint(f"[green]Location: {db.db_path}[/green]")
         rprint(f"[green]Total entries: {total_entries:,}[/green]")
 
         if total_entries > 0:
-            rprint(f"[green]Date range: {date_range[0]} to {date_range[1]}[/green]")
+            rprint(
+                f"[green]Date range: {date_range[0]} to {date_range[1]}[/green]"  # noqa: E501
+            )  # noqa: E501
             rprint(f"[green]Total hours tracked: {total_hours:.2f}[/green]")
             rprint(f"[green]Unique tags: {unique_tags}[/green]")
-            rprint(f"[green]Recent entries (last 30 days): {recent_entries:,}[/green]")
+            rprint(
+                f"[green]Recent entries (last 30 days): {recent_entries:,}[/green]"  # noqa: E501
+            )  # noqa: E501
         else:
             rprint(
-                "[yellow]Database is empty. Use 'import-all' to import data from timewarrior.[/yellow]"
+                "[yellow]Database is empty. Use 'import-all' to import data from timewarrior.[/yellow]"  # noqa: E501
             )
 
         logger.info(
-            f"Database status check: {total_entries} entries, {total_hours:.2f} hours"
+            f"Database status check: {total_entries} entries, {total_hours:.2f} hours"  # noqa: E501
         )
 
     except Exception as e:
@@ -280,7 +306,7 @@ def show_database_path() -> None:
             rprint(f"[dim]Database size: {size:,} bytes[/dim]")
         else:
             rprint(
-                "[yellow]Database file does not exist yet. Run 'init' command to create it.[/yellow]"
+                "[yellow]Database file does not exist yet. Run 'init' command to create it.[/yellow]"  # noqa: E501
             )
 
     except Exception as e:
@@ -293,7 +319,7 @@ def clear_cache(table: str = "all") -> None:
     """Clear cached data from the database.
 
     Args:
-        table: Which table to clear ('time_entries', 'weekly_reports', or 'all')
+        table: Which table to clear ('time_entries', 'weekly_reports', or 'all')  # noqa: E501
     """
     logger.debug(f"Clearing cache for table: {table}")
 
@@ -301,7 +327,9 @@ def clear_cache(table: str = "all") -> None:
         db = Database()
 
         if not db.db_path.exists():
-            rprint("[yellow]No database file exists. Nothing to clear.[/yellow]")
+            rprint(
+                "[yellow]No database file exists. Nothing to clear.[/yellow]"
+            )  # noqa: E501
             return
 
         with sqlite3.connect(db.db_path) as conn:
@@ -309,14 +337,14 @@ def clear_cache(table: str = "all") -> None:
                 result = conn.execute("DELETE FROM time_entries")
                 entries_deleted = result.rowcount
                 rprint(
-                    f"[green]✓ Cleared {entries_deleted} cached time entries[/green]"
+                    f"[green]✓ Cleared {entries_deleted} cached time entries[/green]"  # noqa: E501
                 )
 
             if table == "all" or table == "weekly_reports":
                 result = conn.execute("DELETE FROM weekly_reports")
                 reports_deleted = result.rowcount
                 rprint(
-                    f"[green]✓ Cleared {reports_deleted} cached weekly reports[/green]"
+                    f"[green]✓ Cleared {reports_deleted} cached weekly reports[/green]"  # noqa: E501
                 )
 
         # Vacuum outside of transaction to reclaim space
@@ -325,9 +353,13 @@ def clear_cache(table: str = "all") -> None:
             rprint("[green]✓ Database optimized[/green]")
 
         if table == "all":
-            rprint("[bold green]All cached data has been cleared![/bold green]")
+            rprint(
+                "[bold green]All cached data has been cleared![/bold green]"
+            )  # noqa: E501
         else:
-            rprint(f"[bold green]Cached {table} data has been cleared![/bold green]")
+            rprint(
+                f"[bold green]Cached {table} data has been cleared![/bold green]"  # noqa: E501
+            )  # noqa: E501
 
     except Exception as e:
         logger.error(f"Failed to clear cache: {e}")
@@ -348,7 +380,9 @@ def create_database_commands() -> typer.Typer:
             help="Show what would be imported without actually importing",
         ),
         force: bool = typer.Option(
-            False, "--force", help="Force import even if database already contains data"
+            False,
+            "--force",
+            help="Force import even if database already contains data",  # noqa: E501
         ),
     ) -> None:
         """Import all time tracking data from timewarrior into the database."""
@@ -374,13 +408,13 @@ def create_database_commands() -> typer.Typer:
         table: str = typer.Option(
             "all",
             "--table",
-            help="Which table to clear: 'time_entries', 'weekly_reports', or 'all'",
+            help="Which table to clear: 'time_entries', 'weekly_reports', or 'all'",  # noqa: E501
         )
     ) -> None:
         """Clear cached data from the database."""
         if table not in ["all", "time_entries", "weekly_reports"]:
             rprint(
-                f"[red]Error: Invalid table '{table}'. Must be 'all', 'time_entries', or 'weekly_reports'[/red]"
+                f"[red]Error: Invalid table '{table}'. Must be 'all', 'time_entries', or 'weekly_reports'[/red]"  # noqa: E501
             )
             raise typer.Exit(1)
         clear_cache(table)

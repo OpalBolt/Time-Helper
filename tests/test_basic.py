@@ -17,7 +17,10 @@ def test_app_version():
     runner = CliRunner()
     result = runner.invoke(app, ["--version"])
     # Should not crash, exact behavior depends on implementation
-    assert result.exit_code in [0, 2]  # 0 for success, 2 for typer's default behavior
+    assert result.exit_code in [
+        0,
+        2,
+    ]  # 0 for success, 2 for typer's default behavior  # noqa: E501
 
 
 def test_import_main_module():

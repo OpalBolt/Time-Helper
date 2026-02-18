@@ -1,7 +1,7 @@
 """Enhanced report generator with rich formatting and reports."""
 
 from typing import List, Dict
-from datetime import date, timedelta
+from datetime import date
 from collections import defaultdict
 from rich.console import Console
 from rich.table import Table
@@ -45,9 +45,13 @@ class ReportGenerator:
             daily_total = 0.0
 
             for tag, tag_entries in day_tags.items():
-                total_hours = sum(entry.get_duration_hours() for entry in tag_entries)
+                total_hours = sum(
+                    entry.get_duration_hours() for entry in tag_entries
+                )  # noqa: E501
                 annotations = [
-                    entry.annotation for entry in tag_entries if entry.annotation
+                    entry.annotation
+                    for entry in tag_entries
+                    if entry.annotation  # noqa: E501
                 ]
 
                 tag_summaries[tag] = TagSummary(
@@ -59,7 +63,9 @@ class ReportGenerator:
                 daily_total += total_hours
 
             daily_reports[day_date] = DailyReport(
-                date=day_date, tag_summaries=tag_summaries, total_hours=daily_total
+                date=day_date,
+                tag_summaries=tag_summaries,
+                total_hours=daily_total,  # noqa: E501
             )
 
         # Generate weekly summaries
@@ -67,7 +73,9 @@ class ReportGenerator:
         total_weekly_hours = 0.0
 
         for tag, tag_entries in weekly_data.items():
-            total_hours = sum(entry.get_duration_hours() for entry in tag_entries)
+            total_hours = sum(
+                entry.get_duration_hours() for entry in tag_entries
+            )  # noqa: E501
             annotations = [
                 entry.annotation for entry in tag_entries if entry.annotation
             ]
@@ -95,7 +103,9 @@ class ReportGenerator:
         """Generate a comprehensive weekly report from time entries."""
         from datetime import timedelta
 
-        return self.generate_report(entries, week_start, week_start + timedelta(days=6))
+        return self.generate_report(
+            entries, week_start, week_start + timedelta(days=6)
+        )  # noqa: E501
 
     def print_weekly_report(self, report: WeeklyReport) -> None:
         """Print a comprehensive weekly report with rich formatting."""
@@ -119,9 +129,7 @@ class ReportGenerator:
 
     def _print_daily_report(self, daily_report: DailyReport) -> None:
         """Print a single day's report."""
-        day_header = (
-            f"{daily_report.get_day_name()} ({daily_report.get_formatted_date()}):"
-        )
+        day_header = f"{daily_report.get_day_name()} ({daily_report.get_formatted_date()}):"  # noqa: E501
         rprint(f"[bold green]{day_header}[/bold green]")
 
         if not daily_report.tag_summaries:
@@ -139,7 +147,7 @@ class ReportGenerator:
             # Tag line with hours
             tag_color = self._get_tag_color(tag_summary.tag)
             rprint(
-                f"  [{tag_color}]{tag_summary.tag}: {tag_summary.total_hours:.2f} hours[/{tag_color}]"
+                f"  [{tag_color}]{tag_summary.tag}: {tag_summary.total_hours:.2f} hours[/{tag_color}]"  # noqa: E501
             )
 
             # Annotation lines
@@ -148,7 +156,9 @@ class ReportGenerator:
                 rprint(f"    [dim]{annotation}[/dim]")
 
         # Daily total
-        rprint(f"[bold]Daily Total: {daily_report.total_hours:.2f} hours[/bold]")
+        rprint(
+            f"[bold]Daily Total: {daily_report.total_hours:.2f} hours[/bold]"
+        )  # noqa: E501
 
     def _print_weekly_summary(self, report: WeeklyReport) -> None:
         """Print the weekly summary section."""
@@ -171,14 +181,16 @@ class ReportGenerator:
             )
 
             table.add_row(
-                tag_summary.tag, f"{tag_summary.total_hours:.2f}", daily_breakdown
+                tag_summary.tag,
+                f"{tag_summary.total_hours:.2f}",
+                daily_breakdown,  # noqa: E501
             )
 
         self.console.print(table)
 
         # Total hours
         rprint(
-            f"\n[bold green]Total Hours: {report.total_hours:.2f} hours[/bold green]"
+            f"\n[bold green]Total Hours: {report.total_hours:.2f} hours[/bold green]"  # noqa: E501
         )
 
     def _get_daily_breakdown(
@@ -220,7 +232,7 @@ class ReportGenerator:
     def format_as_markdown(self, report: WeeklyReport) -> str:
         """Format the report as Markdown."""
         lines = []
-        
+
         # Header
         title = f"Time Report - {report.get_week_range_string()}"
         lines.append(f"# {title}")
@@ -233,12 +245,12 @@ class ReportGenerator:
         # Daily reports
         lines.append("## Daily Reports")
         lines.append("")
-        
+
         for daily_report in report.get_sorted_daily_reports():
-            day_header = f"{daily_report.get_day_name()} ({daily_report.get_formatted_date()})"
+            day_header = f"{daily_report.get_day_name()} ({daily_report.get_formatted_date()})"  # noqa: E501
             lines.append(f"### {day_header}")
             lines.append("")
-            
+
             if not daily_report.tag_summaries:
                 lines.append("*No time tracked*")
                 lines.append("")
@@ -246,7 +258,7 @@ class ReportGenerator:
 
             lines.append("| Tag | Hours | Annotations |")
             lines.append("| :--- | :--- | :--- |")
-            
+
             # Sort tags by hours (descending)
             sorted_tags = sorted(
                 daily_report.tag_summaries.values(),
@@ -255,30 +267,38 @@ class ReportGenerator:
             )
 
             for tag_summary in sorted_tags:
-                annotations = ", ".join(tag_summary.get_formatted_annotations())
-                lines.append(f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {annotations} |")
-            
+                annotations = ", ".join(
+                    tag_summary.get_formatted_annotations()
+                )  # noqa: E501
+                lines.append(
+                    f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {annotations} |"  # noqa: E501
+                )  # noqa: E501
+
             lines.append("")
-            lines.append(f"**Daily Total: {daily_report.total_hours:.2f} hours**")
+            lines.append(
+                f"**Daily Total: {daily_report.total_hours:.2f} hours**"
+            )  # noqa: E501
             lines.append("")
 
         # Weekly summary
         lines.append("## Weekly Summary")
         lines.append("")
-        
+
         if not report.weekly_summaries:
             lines.append("*No time tracked this week*")
         else:
             lines.append("| Tag | Total Hours | Daily Breakdown |")
             lines.append("| :--- | :--- | :--- |")
-            
+
             for tag_summary in report.get_sorted_weekly_summaries():
                 # Calculate daily breakdown
                 daily_breakdown = self._get_daily_breakdown(
                     tag_summary.tag, report.daily_reports
                 )
-                lines.append(f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {daily_breakdown} |")
-            
+                lines.append(
+                    f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {daily_breakdown} |"  # noqa: E501
+                )  # noqa: E501
+
             lines.append("")
             lines.append(f"**Total Hours: {report.total_hours:.2f} hours**")
 
@@ -294,7 +314,7 @@ class ReportGenerator:
         writer = csv.DictWriter(output, fieldnames=fieldnames)
 
         writer.writeheader()
-        
+
         for daily_report in report.get_sorted_daily_reports():
             # Sort tags by hours (descending)
             sorted_tags = sorted(
@@ -304,13 +324,17 @@ class ReportGenerator:
             )
 
             for tag_summary in sorted_tags:
-                annotations = "; ".join(tag_summary.get_formatted_annotations())
-                writer.writerow({
-                    "Date": daily_report.get_formatted_date(),
-                    "Day": daily_report.get_day_name(),
-                    "Tag": tag_summary.tag,
-                    "Hours": f"{tag_summary.total_hours:.2f}",
-                    "Annotations": annotations
-                })
+                annotations = "; ".join(
+                    tag_summary.get_formatted_annotations()
+                )  # noqa: E501
+                writer.writerow(
+                    {
+                        "Date": daily_report.get_formatted_date(),
+                        "Day": daily_report.get_day_name(),
+                        "Tag": tag_summary.tag,
+                        "Hours": f"{tag_summary.total_hours:.2f}",
+                        "Annotations": annotations,
+                    }
+                )
 
         return output.getvalue()

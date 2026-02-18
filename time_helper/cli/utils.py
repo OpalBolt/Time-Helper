@@ -36,7 +36,9 @@ def run_timew_command(
     logger.debug(f"Running command: {' '.join(cmd)}")
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=check)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, check=check
+        )  # noqa: E501
         logger.debug(f"Command completed with exit code: {result.returncode}")
         if result.stdout:
             logger.debug(f"Stdout: {result.stdout[:200]}...")
@@ -47,7 +49,7 @@ def run_timew_command(
         logger.error("Timewarrior (timew) not found in PATH")
         raise
     except subprocess.CalledProcessError as e:
-        # Use stdout if stderr is empty (sometimes timewarrior prints errors to stdout)
+        # Use stdout if stderr is empty (sometimes timewarrior prints errors to stdout)  # noqa: E501
         error_msg = e.stderr.strip() or e.stdout.strip() or "Unknown error"
         raise TimewarriorError(error_msg, original_error=e)
 
@@ -143,22 +145,26 @@ def handle_timew_errors(func):
                 error_msg = e.stderr if e.stderr else str(e)
 
             if "No data found" in error_msg:
-                rprint("[yellow]No data found for the specified timespan[/yellow]")
+                rprint(
+                    "[yellow]No data found for the specified timespan[/yellow]"
+                )  # noqa: E501
             elif "There is no active time tracking" in error_msg:
                 rprint("[yellow]No active timer to stop[/yellow]")
             elif "Nothing to undo" in error_msg:
-                rprint("[yellow]Nothing to undo - no recent operations found[/yellow]")
+                rprint(
+                    "[yellow]Nothing to undo - no recent operations found[/yellow]"  # noqa: E501
+                )  # noqa: E501
             elif "You cannot overlap intervals" in error_msg:
                 rprint(
-                    "[yellow]⚠️  Time overlap detected - the specified start time conflicts with existing intervals[/yellow]"
+                    "[yellow]⚠️  Time overlap detected - the specified start time conflicts with existing intervals[/yellow]"  # noqa: E501
                 )
                 rprint(
-                    "[dim]Hint: Use 'timew stop' to end current tracking, or choose a different start time[/dim]"
+                    "[dim]Hint: Use 'timew stop' to end current tracking, or choose a different start time[/dim]"  # noqa: E501
                 )
             raise
         except FileNotFoundError:
             raise TimeHelperError(
-                "'timew' command not found. Make sure timewarrior is installed."
+                "'timew' command not found. Make sure timewarrior is installed."  # noqa: E501
             )
 
     return wrapper
@@ -190,7 +196,7 @@ def entries_have_meaningful_difference(
         after: Entries after change
 
     Returns:
-        True if there's a meaningful difference (not just annotation/tag changes)
+        True if there's a meaningful difference (not just annotation/tag changes)  # noqa: E501
     """
     logger.debug(f"Comparing {len(before)} vs {len(after)} entries")
 
@@ -240,6 +246,8 @@ def display_entries(entries: List[TimeEntry], title: str) -> None:
             duration = f"{entry.get_duration_hours():.2f}h"
 
         annotation = entry.annotation or "No annotation"
-        tags_str = f"\\[{', '.join(entry.tags)}]" if entry.tags else "\\[no tags]"
-        output_line = f"  {i}. [dim]ID:{entry.id}[/dim] {start_time}-{end_time} ({duration}) {tags_str} {annotation}"
+        tags_str = (
+            f"\\[{', '.join(entry.tags)}]" if entry.tags else "\\[no tags]"
+        )  # noqa: E501
+        output_line = f"  {i}. [dim]ID:{entry.id}[/dim] {start_time}-{end_time} ({duration}) {tags_str} {annotation}"  # noqa: E501
         rprint(output_line)

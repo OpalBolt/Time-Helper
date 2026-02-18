@@ -47,7 +47,7 @@ def annotate_entry(
 
     Args:
         timespan: The timespan to show entries for (e.g., :day, :week, :month)
-        entry_id: The ID of the entry to annotate (if not provided, will prompt)
+        entry_id: The ID of the entry to annotate (if not provided, will prompt)  # noqa: E501
         annotation: The annotation text (if not provided, will prompt)
     """
     # Get entries for the specified timespan
@@ -56,7 +56,9 @@ def annotate_entry(
     entries = parse_timew_export(result.stdout)
 
     if not entries:
-        console.print(f"[yellow]No entries found for timespan: {timespan}[/yellow]")
+        console.print(
+            f"[yellow]No entries found for timespan: {timespan}[/yellow]"
+        )  # noqa: E501
         return
 
     # Only display current entries if we need user input (interactive mode)
@@ -66,9 +68,11 @@ def annotate_entry(
     # Get entry ID if not provided
     if entry_id is None:
         try:
-            console.print("\n[bold cyan]Available entries shown above[/bold cyan]")
             console.print(
-                "[dim]You can enter just an ID (e.g., '2') or ID with annotation (e.g., '2 Cable management')[/dim]"
+                "\n[bold cyan]Available entries shown above[/bold cyan]"
+            )  # noqa: E501
+            console.print(
+                "[dim]You can enter just an ID (e.g., '2') or ID with annotation (e.g., '2 Cable management')[/dim]"  # noqa: E501
             )
 
             prompt_response = get_user_input(
@@ -89,7 +93,7 @@ def annotate_entry(
 
         except ValueError:
             console.print(
-                "[red]Invalid entry ID. Please enter a number (optionally followed by annotation).[/red]"
+                "[red]Invalid entry ID. Please enter a number (optionally followed by annotation).[/red]"  # noqa: E501
             )
             return
 
@@ -127,14 +131,16 @@ def annotate_entry(
     run_timew_command(annotate_cmd)
 
     console.print(
-        f"[green]✓ Updated annotation for entry {entry_id}: '{annotation}'[/green]"
+        f"[green]✓ Updated annotation for entry {entry_id}: '{annotation}'[/green]"  # noqa: E501
     )
 
     # Show updated entry
     console.print("\n[bold]Updated entry:[/bold]")
     updated_result = run_timew_command(["export", timespan])
     updated_entries = parse_timew_export(updated_result.stdout)
-    updated_entry = next((e for e in updated_entries if e.id == entry_id), None)
+    updated_entry = next(
+        (e for e in updated_entries if e.id == entry_id), None
+    )  # noqa: E501
     if updated_entry:
         _display_single_entry(updated_entry)
 
@@ -162,7 +168,9 @@ def _display_entries_table(entries: list[TimeEntry]) -> None:
         tags = ", ".join(entry.tags) if entry.tags else "—"
         annotation = entry.annotation or "—"
 
-        table.add_row(str(entry.id), start_time, end_time, duration, tags, annotation)
+        table.add_row(
+            str(entry.id), start_time, end_time, duration, tags, annotation
+        )  # noqa: E501
 
     console.print(table)
 
@@ -211,12 +219,14 @@ def handle_annotate_args(args: Optional[list[str]]) -> None:
         try:
             entry_id = int(args[0])
             annotation_parts = args[1:]
-            annotation = " ".join(annotation_parts) if annotation_parts else None
+            annotation = (
+                " ".join(annotation_parts) if annotation_parts else None
+            )  # noqa: E501
             annotate_entry(":day", entry_id, annotation)
         except ValueError:
             console.print(
-                f"[red]Error: '{args[0]}' is not a valid entry ID or timespan[/red]"
+                f"[red]Error: '{args[0]}' is not a valid entry ID or timespan[/red]"  # noqa: E501
             )
             console.print(
-                "[dim]Use a number for entry ID or :day, :week, etc. for timespan[/dim]"
+                "[dim]Use a number for entry ID or :day, :week, etc. for timespan[/dim]"  # noqa: E501
             )

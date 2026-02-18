@@ -20,7 +20,9 @@ logger = get_logger(__name__)
 console = Console()
 
 
-def _apply_tag_filter(entries: List[TimeEntry], tag_filter: str) -> List[TimeEntry]:
+def _apply_tag_filter(
+    entries: List[TimeEntry], tag_filter: str
+) -> List[TimeEntry]:  # noqa: E501
     """Filter entries by tag.
 
     Args:
@@ -37,7 +39,9 @@ def _apply_tag_filter(entries: List[TimeEntry], tag_filter: str) -> List[TimeEnt
         if any(tag_filter.lower() in tag.lower() for tag in entry.tags):
             filtered_entries.append(entry)
 
-    logger.debug(f"Filtered {len(entries)} entries down to {len(filtered_entries)}")
+    logger.debug(
+        f"Filtered {len(entries)} entries down to {len(filtered_entries)}"
+    )  # noqa: E501
     return filtered_entries
 
 
@@ -82,7 +86,10 @@ def _create_summary_table(entries: List[TimeEntry]) -> Table:
         formatted_duration = _format_duration(hours)
 
         table.add_row(
-            tag, formatted_duration, str(len(data["entries"])), latest_annotation
+            tag,
+            formatted_duration,
+            str(len(data["entries"])),
+            latest_annotation,  # noqa: E501
         )
 
     return table
@@ -102,7 +109,9 @@ def _get_latest_annotation(entries: List[TimeEntry]) -> str:
 
     for entry in entries:
         entry_time = entry.parse_start()
-        if entry.annotation and (latest_time is None or entry_time > latest_time):
+        if entry.annotation and (
+            latest_time is None or entry_time > latest_time
+        ):  # noqa: E501
             latest_annotation = entry.annotation
             latest_time = entry_time
 
@@ -169,7 +178,12 @@ def _create_detailed_table(entries: List[TimeEntry]) -> Table:
         annotation = entry.annotation or "[dim]—[/dim]"
 
         detail_table.add_row(
-            str(entry.id), start_str, end_str, duration_str, tags_str, annotation
+            str(entry.id),
+            start_str,
+            end_str,
+            duration_str,
+            tags_str,
+            annotation,  # noqa: E501
         )
 
     return detail_table
@@ -200,7 +214,9 @@ def display_summary(timespan: str, tag_filter: Optional[str] = None) -> None:
         timespan: Timespan to export (e.g., ":day", ":week", ":week-2")
         tag_filter: Optional tag filter
     """
-    logger.info(f"Displaying summary for timespan: {timespan}, filter: {tag_filter}")
+    logger.info(
+        f"Displaying summary for timespan: {timespan}, filter: {tag_filter}"
+    )  # noqa: E501
 
     # Convert new timespan format to timewarrior format
     timew_timespan = convert_timespan_format(timespan)
@@ -226,7 +242,7 @@ def display_summary(timespan: str, tag_filter: Optional[str] = None) -> None:
         entries = _apply_tag_filter(entries, tag_filter)
         if not entries:
             rprint(
-                f"[yellow]No entries found matching tag filter: {tag_filter}[/yellow]"
+                f"[yellow]No entries found matching tag filter: {tag_filter}[/yellow]"  # noqa: E501
             )
             return
 
@@ -283,7 +299,8 @@ def create_summary_commands() -> typer.Typer:
     @summary_app.command("su", hidden=True)
     def summary_command(
         timespan: str = typer.Argument(
-            ":day", help="Timespan to export (e.g., :day, :week, :week-2, :month)"
+            ":day",
+            help="Timespan to export (e.g., :day, :week, :week-2, :month)",  # noqa: E501
         ),
         tag_filter: Optional[str] = typer.Argument(
             None, help="Filter entries by tag (e.g., 'admin', 'dev')"
@@ -291,7 +308,7 @@ def create_summary_commands() -> typer.Typer:
     ) -> None:
         """Display timewarrior data with formatting and optional tag filtering.
 
-        Shows time tracking data with timezone-aware timestamps and color-coded duration indicators.
+        Shows time tracking data with timezone-aware timestamps and color-coded duration indicators.  # noqa: E501
 
         COLOR CODING:
         • 🟢 Green: Long duration entries (≥4h total, ≥2h individual)
@@ -309,8 +326,8 @@ def create_summary_commands() -> typer.Typer:
         Examples:
             time-helper su :week          # Show current week
             time-helper su :week-2        # Show 2 weeks ago
-            time-helper su :week admin    # Show current week filtered by 'admin' tag
-            time-helper su :day randcorp  # Show today filtered by 'randcorp' tag
+            time-helper su :week admin    # Show current week filtered by 'admin' tag  # noqa: E501
+            time-helper su :day randcorp  # Show today filtered by 'randcorp' tag  # noqa: E501
         """
         display_summary(timespan, tag_filter)
 

@@ -97,6 +97,7 @@ def test_generate_command_all_new_options(mock_generate_report):
     )
     assert result.exit_code == 0
 
+
 @patch("time_helper.cli.report_commands.generate_report")
 def test_generate_command_format(mock_generate_report):
     """Test that the 'generate' command correctly passes --format."""
