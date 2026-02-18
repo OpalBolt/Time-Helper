@@ -1,11 +1,16 @@
 """Configuration management for time-helper."""
 
+import hashlib
 import os
 import tomllib
 import tomli_w
 from pathlib import Path
 from typing import Dict, Optional
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, ValidationError
+
+from .logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class ColorScheme(BaseModel):
@@ -23,7 +28,9 @@ class ColorScheme(BaseModel):
         Returns:
             Rich color name
         """
-        color_index = hash(tag) % len(self.colors)
+        # Use stable hash for consistent colors across runs
+        tag_hash = int(hashlib.md5(tag.encode()).hexdigest(), 16)
+        color_index = tag_hash % len(self.colors)
         return self.colors[color_index]
 
 
@@ -93,6 +100,8 @@ AVAILABLE_SCHEMES: Dict[str, ColorScheme] = {
 class Config(BaseModel):
     """Application configuration."""
 
+    model_config = {"validate_assignment": True}
+
     color_scheme: str = "default"
 
     @field_validator("color_scheme")
@@ -161,8 +170,29 @@ class Config(BaseModel):
             with open(config_path, "rb") as f:
                 data = tomllib.load(f)
             return cls(**data)
-        except Exception:
-            # If config file is corrupted, return default
+        except (OSError, IOError) as e:
+            # I/O errors - log and return default
+            logger.warning(
+                "Failed to read config file %s: %s. Using defaults.",
+                config_path,
+                e,
+            )
+            return cls()
+        except (tomllib.TOMLDecodeError, ValidationError) as e:
+            # Parse or validation errors - log and return default
+            logger.warning(
+                "Config file %s is invalid: %s. Using defaults.",
+                config_path,
+                e,
+            )
+            return cls()
+        except Exception as e:
+            # Unexpected errors - log and return default
+            logger.error(
+                "Unexpected error loading config from %s: %s. Using defaults.",
+                config_path,
+                e,
+            )
             return cls()
 
 

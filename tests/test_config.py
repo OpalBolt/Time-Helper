@@ -3,7 +3,10 @@
 import pytest
 import tempfile
 import os
+from unittest.mock import patch
+from typer.testing import CliRunner
 from time_helper.config import Config, ColorScheme, get_config_path
+from time_helper.cli import app
 
 
 class TestColorScheme:
@@ -197,3 +200,227 @@ class TestColorSchemes:
                 assert color in valid_colors or color.startswith(
                     "#"
                 ), f"Invalid color '{color}' in {name} scheme"
+
+
+class TestConfigCliCommands:
+    """Test configuration CLI commands with error handling."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.runner = CliRunner()
+
+    def test_set_scheme_command_success(self, tmp_path):
+        """Test set-scheme command successfully sets color scheme."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            result = self.runner.invoke(
+                app, ["config", "set-scheme", "monochrome"]
+            )
+            assert result.exit_code == 0
+            assert "✓ Color scheme set to:" in result.stdout
+            assert "monochrome" in result.stdout
+
+    def test_set_scheme_command_invalid_scheme(self, tmp_path):
+        """Test set-scheme command with invalid scheme name."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            result = self.runner.invoke(
+                app, ["config", "set-scheme", "nonexistent_scheme"]
+            )
+            assert result.exit_code == 1
+            assert "Error" in result.stdout
+
+    def test_set_scheme_command_oserror_handling(self, tmp_path):
+        """Test set-scheme command handles OSError when writing config."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            with patch(
+                "time_helper.cli.config_commands.Config.save"
+            ) as mock_save:
+                mock_save.side_effect = OSError("Permission denied")
+                result = self.runner.invoke(
+                    app, ["config", "set-scheme", "pastel"]
+                )
+                assert result.exit_code == 1
+                assert "Failed to write configuration file" in result.stdout
+                assert "permissions" in result.stdout.lower()
+
+    def test_set_scheme_command_ioerror_handling(self, tmp_path):
+        """Test set-scheme command handles IOError when writing config."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            with patch(
+                "time_helper.cli.config_commands.Config.save"
+            ) as mock_save:
+                mock_save.side_effect = IOError("Disk full")
+                result = self.runner.invoke(
+                    app, ["config", "set-scheme", "vibrant"]
+                )
+                assert result.exit_code == 1
+                assert "Failed to write configuration file" in result.stdout
+
+    def test_reset_config_command_success(self, tmp_path):
+        """Test reset command successfully resets configuration."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            result = self.runner.invoke(
+                app, ["config", "reset"], input="y\n"
+            )
+            assert result.exit_code == 0
+            assert "✓ Configuration reset to defaults" in result.stdout
+
+    def test_reset_config_command_cancelled(self, tmp_path):
+        """Test reset command when user cancels."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            result = self.runner.invoke(
+                app, ["config", "reset"], input="n\n"
+            )
+            assert result.exit_code == 0
+            assert "Cancelled" in result.stdout
+
+    def test_reset_config_command_oserror_handling(self, tmp_path):
+        """Test reset command handles OSError when writing config."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            with patch(
+                "time_helper.cli.config_commands.Config.save"
+            ) as mock_save:
+                mock_save.side_effect = OSError("Access denied")
+                result = self.runner.invoke(
+                    app, ["config", "reset"], input="y\n"
+                )
+                assert result.exit_code == 1
+                assert "Failed to write configuration file" in result.stdout
+                assert "permissions" in result.stdout.lower()
+
+    def test_reset_config_command_oserror_permission_error(self, tmp_path):
+        """Test reset handles PermissionError (subclass of OSError)."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            with patch(
+                "time_helper.cli.config_commands.Config.save"
+            ) as mock_save:
+                mock_save.side_effect = PermissionError("Not authorized")
+                result = self.runner.invoke(
+                    app, ["config", "reset"], input="y\n"
+                )
+                assert result.exit_code == 1
+                assert "Failed to write configuration file" in result.stdout
+
+    def test_reset_config_command_ioerror_handling(self, tmp_path):
+        """Test reset command handles IOError when writing config."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            with patch(
+                "time_helper.cli.config_commands.Config.save"
+            ) as mock_save:
+                mock_save.side_effect = IOError("Write failed")
+                result = self.runner.invoke(
+                    app, ["config", "reset"], input="y\n"
+                )
+                assert result.exit_code == 1
+                assert "Failed to write configuration file" in result.stdout
+
+    def test_set_scheme_successful_update_creates_config_file(
+        self, tmp_path
+    ):
+        """Test set-scheme creates config file when it doesn't exist."""
+        config_file = tmp_path / "config.toml"
+        assert not config_file.exists()
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            with patch(
+                "time_helper.config.get_config_path"
+            ) as mock_path_config:
+                mock_path_config.return_value = config_file
+                result = self.runner.invoke(
+                    app, ["config", "set-scheme", "pastel"]
+                )
+                assert result.exit_code == 0
+                assert config_file.exists()
+
+    def test_reset_config_successful_update_creates_config_file(
+        self, tmp_path
+    ):
+        """Test reset creates config file when it doesn't exist."""
+        config_file = tmp_path / "config.toml"
+        assert not config_file.exists()
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            with patch(
+                "time_helper.config.get_config_path"
+            ) as mock_path_config:
+                mock_path_config.return_value = config_file
+                result = self.runner.invoke(
+                    app, ["config", "reset"], input="y\n"
+                )
+                assert result.exit_code == 0
+                assert config_file.exists()
+
+    def test_set_scheme_error_message_helpful(self, tmp_path):
+        """Test set-scheme error message is helpful to user."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            with patch(
+                "time_helper.cli.config_commands.Config.save"
+            ) as mock_save:
+                mock_save.side_effect = OSError("Permission denied")
+                result = self.runner.invoke(
+                    app, ["config", "set-scheme", "default"]
+                )
+                assert result.exit_code == 1
+                # Error message should guide user to check permissions
+                assert "Check file permissions" in result.stdout
+
+    def test_reset_config_error_message_helpful(self, tmp_path):
+        """Test reset error message is helpful to user."""
+        config_file = tmp_path / "config.toml"
+        with patch(
+            "time_helper.cli.config_commands.get_config_path"
+        ) as mock_path:
+            mock_path.return_value = config_file
+            with patch(
+                "time_helper.cli.config_commands.Config.save"
+            ) as mock_save:
+                mock_save.side_effect = OSError("Disk full")
+                result = self.runner.invoke(
+                    app, ["config", "reset"], input="y\n"
+                )
+                assert result.exit_code == 1
+                # Error message should guide user to check permissions
+                assert "Check file permissions" in result.stdout
