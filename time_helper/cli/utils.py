@@ -153,7 +153,7 @@ def handle_timew_errors(func):
             elif "Nothing to undo" in error_msg:
                 rprint(
                     "[yellow]Nothing to undo - no recent operations found[/yellow]"  # noqa: E501
-                )  # noqa: E501
+                )
             elif "You cannot overlap intervals" in error_msg:
                 rprint(
                     "[yellow]⚠️  Time overlap detected - the specified start time conflicts with existing intervals[/yellow]"  # noqa: E501

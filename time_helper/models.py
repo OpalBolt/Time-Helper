@@ -155,7 +155,7 @@ class WeeklyReport:
         return [
             self.daily_reports[date]
             for date in sorted(self.daily_reports.keys())  # noqa: E501
-        ]  # noqa: E501
+        ]
 
     def get_sorted_weekly_summaries(self) -> List[TagSummary]:
         """Get weekly tag summaries sorted by total hours (descending)."""

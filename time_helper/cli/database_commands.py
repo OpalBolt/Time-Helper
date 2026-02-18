@@ -272,12 +272,12 @@ def database_status() -> None:
         if total_entries > 0:
             rprint(
                 f"[green]Date range: {date_range[0]} to {date_range[1]}[/green]"  # noqa: E501
-            )  # noqa: E501
+            )
             rprint(f"[green]Total hours tracked: {total_hours:.2f}[/green]")
             rprint(f"[green]Unique tags: {unique_tags}[/green]")
             rprint(
                 f"[green]Recent entries (last 30 days): {recent_entries:,}[/green]"  # noqa: E501
-            )  # noqa: E501
+            )
         else:
             rprint(
                 "[yellow]Database is empty. Use 'import-all' to import data from timewarrior.[/yellow]"  # noqa: E501
@@ -359,7 +359,7 @@ def clear_cache(table: str = "all") -> None:
         else:
             rprint(
                 f"[bold green]Cached {table} data has been cleared![/bold green]"  # noqa: E501
-            )  # noqa: E501
+            )
 
     except Exception as e:
         logger.error(f"Failed to clear cache: {e}")

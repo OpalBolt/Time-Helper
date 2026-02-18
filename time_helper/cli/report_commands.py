@@ -280,7 +280,7 @@ def generate_report(
                         e
                         for e in all_entries
                         if any(t in tags for t in e.tags)  # noqa: E501
-                    ]  # noqa: E501
+                    ]
         else:
             # No cache, use exported entries filtered manually
             all_entries = exported_entries
