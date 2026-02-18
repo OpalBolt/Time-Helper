@@ -1,0 +1,30 @@
+version: '3'
+
+tasks:
+  test:
+    desc: Run pytest test suite
+    cmds:
+      - nix run .#tests
+
+  lint:
+    desc: Run flake8 linter
+    cmds:
+      - nix run .#lint
+
+  format:
+    desc: Run black formatter
+    cmds:
+      - nix run .#format
+
+  build:
+    desc: Build package
+    cmds:
+      - nix build
+
+  all:
+    desc: Run all checks (format, lint, test, build)
+    cmds:
+      - task: format
+      - task: lint
+      - task: test
+      - task: build

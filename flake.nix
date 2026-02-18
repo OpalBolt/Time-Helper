@@ -90,11 +90,13 @@
           pythonEnv
           pkgs.uv # UV package manager
           pkgs.timewarrior # Time tracking tool
+          pkgs.go-task # Task runner
         ];
         shellHook = ''
           echo "Entered dev shell (Python ${python.version})"
           echo "UV is available for package management"
           echo "Timewarrior (timew) is available for time tracking"
+          echo "Task runner (task) is available for common development tasks"
           echo "Run 'uv sync' to install dependencies from pyproject.toml"
         '';
       };

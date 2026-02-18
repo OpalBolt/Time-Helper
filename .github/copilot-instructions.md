@@ -24,6 +24,16 @@ nix run .#lint                        # flake8
 nix run .#format                      # black
 ```
 
+Alternatively, use the provided Taskfile for convenience:
+
+```bash
+task all      # Run all checks (format, lint, test, build)
+task test     # pytest
+task lint     # flake8
+task format   # black
+task build    # build package
+```
+
 Environment setup: `direnv allow` then `uv sync` (inside the Nix dev shell only).
 
 ## Development Workflow
