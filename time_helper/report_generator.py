@@ -272,7 +272,7 @@ class ReportGenerator:
                 )  # noqa: E501
                 lines.append(
                     f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {annotations} |"  # noqa: E501
-                )  # noqa: E501
+                )
 
             lines.append("")
             lines.append(
@@ -297,7 +297,7 @@ class ReportGenerator:
                 )
                 lines.append(
                     f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {daily_breakdown} |"  # noqa: E501
-                )  # noqa: E501
+                )
 
             lines.append("")
             lines.append(f"**Total Hours: {report.total_hours:.2f} hours**")

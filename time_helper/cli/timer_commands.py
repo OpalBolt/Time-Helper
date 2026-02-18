@@ -264,7 +264,7 @@ def start_timer(args: Optional[List[str]] = None) -> None:
             # Provide helpful guidance for overlaps that couldn't be auto-resolved  # noqa: E501
             rprint(
                 "[yellow]⚠️  Cannot start timer - time overlap detected[/yellow]"  # noqa: E501
-            )  # noqa: E501
+            )
             rprint(
                 "[dim]The specified start time conflicts with existing time intervals.[/dim]"  # noqa: E501
             )
@@ -275,10 +275,10 @@ def start_timer(args: Optional[List[str]] = None) -> None:
             rprint("[dim]  • Check active timers: [/dim][cyan]timew[/cyan]")
             rprint(
                 "[dim]  • View recent intervals: [/dim][cyan]timew summary[/cyan]"  # noqa: E501
-            )  # noqa: E501
+            )
             rprint(
                 "[dim]  • Manually resolve with: [/dim][cyan]timew modify[/cyan]"  # noqa: E501
-            )  # noqa: E501
+            )
             return
         else:
             # Re-raise other errors to be handled by decorator
@@ -369,7 +369,7 @@ def undo_last_action(single_operation: bool = False) -> None:
             )  # noqa: E501
             rprint(
                 "[yellow]Only tags/annotations changed, continuing undo...[/yellow]"  # noqa: E501
-            )  # noqa: E501
+            )
 
             # Safety check to prevent infinite loops
             if undo_count >= 10:
