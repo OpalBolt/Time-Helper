@@ -15,6 +15,7 @@ from .database_commands import create_database_commands
 from .annotate_commands import undo_annotation, handle_annotate_args
 from ..logging_config import setup_logging, get_logger
 from ..exceptions import TimeHelperError
+from .. import colors
 
 # Initialize logging first (silent by default)
 setup_logging(verbosity=0)  # Will be overridden by callback if needed
@@ -154,7 +155,7 @@ def main():
     except TimeHelperError as e:
         # Always print clean error for known application errors
         console = Console()
-        console.print(f"[red]Error: {e}[/red]")
+        console.print(f"[{colors.ERROR}]Error: {e}[/{colors.ERROR}]")
         # Log the full traceback at DEBUG level for developers
         logger.debug(f"Application error: {e}", exc_info=True)
         sys.exit(1)
@@ -164,9 +165,11 @@ def main():
             raise
         logger.exception("An unexpected error occurred")
         console = Console()
-        console.print("[bold red]An unexpected error occurred.[/bold red]")
         console.print(
-            "[dim]Use --debug for more information or check the log file.[/dim]"
+            f"[bold {colors.ERROR}]An unexpected error occurred.[/bold {colors.ERROR}]"
+        )
+        console.print(
+            f"[{colors.DIM}]Use --debug for more information or check the log file.[/{colors.DIM}]"
         )
         sys.exit(1)
 

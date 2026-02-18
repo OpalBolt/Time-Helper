@@ -12,6 +12,7 @@ from .utils import run_timew_command, handle_timew_errors, parse_timew_export
 from ..database import Database
 from ..models import TimeEntry
 from ..logging_config import get_logger
+from .. import colors
 
 logger = get_logger(__name__)
 
@@ -52,7 +53,9 @@ def _parse_entries_by_date(
 
         except Exception as e:
             logger.warning(f"Failed to parse entry: {e}")
-            rprint(f"[yellow]Warning: Failed to parse entry: {e}[/yellow]")
+            rprint(
+                f"[{colors.WARNING}]Warning: Failed to parse entry: {e}[/{colors.WARNING}]"
+            )
 
     logger.debug(f"Parsed {total_entries} entries across {len(entries_by_date)} days")
     return entries_by_date, total_entries, earliest_date or "", latest_date or ""
@@ -92,13 +95,19 @@ def _display_dry_run_summary(
         latest_date: Latest date in data
     """
     rprint(f"\n[bold blue]Dry Run Summary:[/bold blue]")
-    rprint(f"[green]Total entries to import: {total_entries:,}[/green]")
-    rprint(f"[green]Date range: {earliest_date} to {latest_date}[/green]")
-    rprint(f"[green]Number of days: {len(entries_by_date)}[/green]")
+    rprint(
+        f"[{colors.SUCCESS}]Total entries to import: {total_entries:,}[/{colors.SUCCESS}]"
+    )
+    rprint(
+        f"[{colors.SUCCESS}]Date range: {earliest_date} to {latest_date}[/{colors.SUCCESS}]"
+    )
+    rprint(
+        f"[{colors.SUCCESS}]Number of days: {len(entries_by_date)}[/{colors.SUCCESS}]"
+    )
 
     # Show tag summary
     tag_counts = _get_tag_counts(entries_by_date)
-    rprint(f"[green]Unique tags: {len(tag_counts)}[/green]")
+    rprint(f"[{colors.SUCCESS}]Unique tags: {len(tag_counts)}[/{colors.SUCCESS}]")
 
     # Show top 10 tags
     if tag_counts:
@@ -108,7 +117,7 @@ def _display_dry_run_summary(
             rprint(f"  {tag}: {count} entries")
 
     rprint(
-        f"\n[yellow]Use 'import-all' without --dry-run to perform the actual import.[/yellow]"
+        f"\n[{colors.WARNING}]Use 'import-all' without --dry-run to perform the actual import.[/{colors.WARNING}]"
     )
 
 
@@ -132,10 +141,10 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
 
             if existing_count > 0:
                 rprint(
-                    f"[yellow]Database already contains {existing_count:,} entries.[/yellow]"
+                    f"[{colors.WARNING}]Database already contains {existing_count:,} entries.[/{colors.WARNING}]"
                 )
                 rprint(
-                    "[yellow]Use --force to import anyway, or --dry-run to see what would be imported.[/yellow]"
+                    f"[{colors.WARNING}]Use --force to import anyway, or --dry-run to see what would be imported.[/{colors.WARNING}]"
                 )
                 return
 
@@ -152,11 +161,11 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
         data = json.loads(result.stdout) if result.stdout.strip() else []
     except json.JSONDecodeError as e:
         logger.error(f"Failed to parse JSON: {e}")
-        rprint(f"[red]Error parsing timewarrior data: {e}[/red]")
+        rprint(f"[{colors.ERROR}]Error parsing timewarrior data: {e}[/{colors.ERROR}]")
         raise typer.Exit(1)
 
     if not data:
-        rprint("[yellow]No data found in timewarrior[/yellow]")
+        rprint(f"[{colors.WARNING}]No data found in timewarrior[/{colors.WARNING}]")
         return
 
     # Parse entries and group by date
@@ -164,7 +173,7 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
         data
     )
 
-    rprint(f"[green]Processing {len(data)} entries...[/green]")
+    rprint(f"[{colors.SUCCESS}]Processing {len(data)} entries...[/{colors.SUCCESS}]")
 
     if dry_run:
         _display_dry_run_summary(
@@ -181,13 +190,17 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
             logger.debug(f"Imported {len(entries)} entries for {entry_date}")
         except Exception as e:
             logger.error(f"Failed to import entries for {entry_date}: {e}")
-            rprint(f"[red]Error importing data for {entry_date}: {e}[/red]")
+            rprint(
+                f"[{colors.ERROR}]Error importing data for {entry_date}: {e}[/{colors.ERROR}]"
+            )
 
     rprint(f"\n[bold green]✓ Import complete![/bold green]")
     rprint(
-        f"[green]Successfully imported {imported_count:,} out of {total_entries:,} entries[/green]"
+        f"[{colors.SUCCESS}]Successfully imported {imported_count:,} out of {total_entries:,} entries[/{colors.SUCCESS}]"
     )
-    rprint(f"[green]Date range: {earliest_date} to {latest_date}[/green]")
+    rprint(
+        f"[{colors.SUCCESS}]Date range: {earliest_date} to {latest_date}[/{colors.SUCCESS}]"
+    )
     rprint(f"[dim]Database location: {db.db_path}[/dim]")
 
     logger.info(f"Import completed: {imported_count}/{total_entries} entries")
@@ -199,12 +212,14 @@ def init_database() -> None:
 
     try:
         db = Database()  # This will initialize the database
-        rprint("[green]✓ Database initialized successfully![/green]")
+        rprint(
+            f"[{colors.SUCCESS}]✓ Database initialized successfully![/{colors.SUCCESS}]"
+        )
         rprint(f"[dim]Database location: {db.db_path}[/dim]")
         logger.info(f"Database initialized at {db.db_path}")
     except Exception as e:
         logger.error(f"Database initialization failed: {e}")
-        rprint(f"[red]Error initializing database: {e}[/red]")
+        rprint(f"[{colors.ERROR}]Error initializing database: {e}[/{colors.ERROR}]")
         raise typer.Exit(1)
 
 
@@ -243,17 +258,23 @@ def database_status() -> None:
             recent_entries = cursor.fetchone()[0]
 
         rprint(f"[bold blue]Database Status[/bold blue]")
-        rprint(f"[green]Location: {db.db_path}[/green]")
-        rprint(f"[green]Total entries: {total_entries:,}[/green]")
+        rprint(f"[{colors.SUCCESS}]Location: {db.db_path}[/{colors.SUCCESS}]")
+        rprint(f"[{colors.SUCCESS}]Total entries: {total_entries:,}[/{colors.SUCCESS}]")
 
         if total_entries > 0:
-            rprint(f"[green]Date range: {date_range[0]} to {date_range[1]}[/green]")
-            rprint(f"[green]Total hours tracked: {total_hours:.2f}[/green]")
-            rprint(f"[green]Unique tags: {unique_tags}[/green]")
-            rprint(f"[green]Recent entries (last 30 days): {recent_entries:,}[/green]")
+            rprint(
+                f"[{colors.SUCCESS}]Date range: {date_range[0]} to {date_range[1]}[/{colors.SUCCESS}]"
+            )
+            rprint(
+                f"[{colors.SUCCESS}]Total hours tracked: {total_hours:.2f}[/{colors.SUCCESS}]"
+            )
+            rprint(f"[{colors.SUCCESS}]Unique tags: {unique_tags}[/{colors.SUCCESS}]")
+            rprint(
+                f"[{colors.SUCCESS}]Recent entries (last 30 days): {recent_entries:,}[/{colors.SUCCESS}]"
+            )
         else:
             rprint(
-                "[yellow]Database is empty. Use 'import-all' to import data from timewarrior.[/yellow]"
+                f"[{colors.WARNING}]Database is empty. Use 'import-all' to import data from timewarrior.[/{colors.WARNING}]"
             )
 
         logger.info(
@@ -262,7 +283,7 @@ def database_status() -> None:
 
     except Exception as e:
         logger.error(f"Database status check failed: {e}")
-        rprint(f"[red]Error checking database status: {e}[/red]")
+        rprint(f"[{colors.ERROR}]Error checking database status: {e}[/{colors.ERROR}]")
         raise typer.Exit(1)
 
 
@@ -279,12 +300,12 @@ def show_database_path() -> None:
             rprint(f"[dim]Database size: {size:,} bytes[/dim]")
         else:
             rprint(
-                "[yellow]Database file does not exist yet. Run 'init' command to create it.[/yellow]"
+                f"[{colors.WARNING}]Database file does not exist yet. Run 'init' command to create it.[/{colors.WARNING}]"
             )
 
     except Exception as e:
         logger.error(f"Failed to show database path: {e}")
-        rprint(f"[red]Error accessing database: {e}[/red]")
+        rprint(f"[{colors.ERROR}]Error accessing database: {e}[/{colors.ERROR}]")
         raise typer.Exit(1)
 
 
@@ -300,7 +321,9 @@ def clear_cache(table: str = "all") -> None:
         db = Database()
 
         if not db.db_path.exists():
-            rprint("[yellow]No database file exists. Nothing to clear.[/yellow]")
+            rprint(
+                f"[{colors.WARNING}]No database file exists. Nothing to clear.[/{colors.WARNING}]"
+            )
             return
 
         with sqlite3.connect(db.db_path) as conn:
@@ -308,7 +331,7 @@ def clear_cache(table: str = "all") -> None:
                 result = conn.execute("DELETE FROM time_entries")
                 entries_deleted = result.rowcount
                 rprint(
-                    f"[green]✓ Cleared {entries_deleted} cached time entries[/green]"
+                    f"[{colors.SUCCESS}]✓ Cleared {entries_deleted} cached time entries[/{colors.SUCCESS}]"
                 )
 
             if table == "all" or table == "weekly_reports":

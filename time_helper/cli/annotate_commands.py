@@ -10,6 +10,7 @@ from ..models import TimeEntry
 from .utils import run_timew_command, handle_timew_errors, parse_timew_export
 from .timer_commands import undo_last_action
 from ..logging_config import get_logger
+from .. import colors
 
 logger = get_logger(__name__)
 console = Console()
@@ -56,7 +57,9 @@ def annotate_entry(
     entries = parse_timew_export(result.stdout)
 
     if not entries:
-        console.print(f"[yellow]No entries found for timespan: {timespan}[/yellow]")
+        console.print(
+            f"[{colors.WARNING}]No entries found for timespan: {timespan}[/{colors.WARNING}]"
+        )
         return
 
     # Only display current entries if we need user input (interactive mode)
@@ -66,7 +69,9 @@ def annotate_entry(
     # Get entry ID if not provided
     if entry_id is None:
         try:
-            console.print("\n[bold cyan]Available entries shown above[/bold cyan]")
+            console.print(
+                f"\n[bold {colors.ACCENT}]Available entries shown above[/bold {colors.ACCENT}]"
+            )
             console.print(
                 "[dim]You can enter just an ID (e.g., '2') or ID with annotation (e.g., '2 Cable management')[/dim]"
             )
@@ -76,7 +81,9 @@ def annotate_entry(
             ).strip()
 
             if not prompt_response:
-                console.print("[yellow]No input provided. Exiting.[/yellow]")
+                console.print(
+                    f"[{colors.WARNING}]No input provided. Exiting.[/{colors.WARNING}]"
+                )
                 return
 
             # Try to parse "ID annotation" format (e.g., "2 Cable management")
@@ -89,7 +96,7 @@ def annotate_entry(
 
         except ValueError:
             console.print(
-                "[red]Invalid entry ID. Please enter a number (optionally followed by annotation).[/red]"
+                f"[{colors.ERROR}]Invalid entry ID. Please enter a number (optionally followed by annotation).[/{colors.ERROR}]"
             )
             return
 
@@ -101,7 +108,9 @@ def annotate_entry(
             break
 
     if target_entry is None:
-        console.print(f"[red]Entry with ID {entry_id} not found.[/red]")
+        console.print(
+            f"[{colors.ERROR}]Entry with ID {entry_id} not found.[/{colors.ERROR}]"
+        )
         return
 
     # Get annotation if not provided
@@ -114,7 +123,9 @@ def annotate_entry(
         ).strip()
 
         if not annotation:
-            console.print("[yellow]No annotation provided. Exiting.[/yellow]")
+            console.print(
+                f"[{colors.WARNING}]No annotation provided. Exiting.[/{colors.WARNING}]"
+            )
             return
     else:
         # When annotation is provided directly, show the former annotation
@@ -127,7 +138,7 @@ def annotate_entry(
     run_timew_command(annotate_cmd)
 
     console.print(
-        f"[green]✓ Updated annotation for entry {entry_id}: '{annotation}'[/green]"
+        f"[{colors.SUCCESS}]✓ Updated annotation for entry {entry_id}: '{annotation}'[/{colors.SUCCESS}]"
     )
 
     # Show updated entry
@@ -142,12 +153,12 @@ def annotate_entry(
 def _display_entries_table(entries: list[TimeEntry]) -> None:
     """Display entries in a formatted table."""
     table = Table(title="Current Entries")
-    table.add_column("ID", style="cyan", no_wrap=True)
-    table.add_column("Start", style="magenta")
-    table.add_column("End", style="magenta")
-    table.add_column("Duration", style="green")
-    table.add_column("Tags", style="blue")
-    table.add_column("Annotation", style="yellow")
+    table.add_column("ID", style=colors.COL_PRIMARY, no_wrap=True)
+    table.add_column("Start", style=colors.COL_TIME)
+    table.add_column("End", style=colors.COL_TIME)
+    table.add_column("Duration", style=colors.COL_DURATION)
+    table.add_column("Tags", style=colors.COL_TAG)
+    table.add_column("Annotation", style=colors.COL_ANNOTATION)
 
     for entry in entries:
         start_time = entry.parse_start().strftime("%H:%M")
@@ -215,7 +226,7 @@ def handle_annotate_args(args: Optional[list[str]]) -> None:
             annotate_entry(":day", entry_id, annotation)
         except ValueError:
             console.print(
-                f"[red]Error: '{args[0]}' is not a valid entry ID or timespan[/red]"
+                f"[{colors.ERROR}]Error: '{args[0]}' is not a valid entry ID or timespan[/{colors.ERROR}]"
             )
             console.print(
                 "[dim]Use a number for entry ID or :day, :week, etc. for timespan[/dim]"

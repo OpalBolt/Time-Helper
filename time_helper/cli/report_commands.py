@@ -15,6 +15,7 @@ from ..models import TimeEntry
 from ..report_generator import ReportGenerator
 from ..week_utils import WeekUtils
 from ..logging_config import get_logger
+from .. import colors
 
 logger = get_logger(__name__)
 console = Console()
@@ -132,7 +133,7 @@ def export_week(
     week_dates = week_utils.get_week_dates(week_start)
 
     rprint(
-        f"[blue]📤 Exporting data for week of {week_start.strftime('%B %d, %Y')}...[/blue]"
+        f"[{colors.INFO}]📤 Exporting data for week of {week_start.strftime('%B %d, %Y')}...[/{colors.INFO}]"
     )
 
     all_entries: List[TimeEntry] = []
@@ -147,11 +148,13 @@ def export_week(
 
     if not all_entries:
         rprint(
-            f"[yellow]No time entries found for week of {week_start.strftime('%B %d, %Y')}[/yellow]"
+            f"[{colors.WARNING}]No time entries found for week of {week_start.strftime('%B %d, %Y')}[/{colors.WARNING}]"
         )
         return
 
-    rprint(f"[green]✓ Exported {len(all_entries)} entries for the week[/green]")
+    rprint(
+        f"[{colors.SUCCESS}]✓ Exported {len(all_entries)} entries for the week[/{colors.SUCCESS}]"
+    )
 
     # Store in cache
     try:
@@ -159,7 +162,9 @@ def export_week(
         logger.info(f"Stored {len(all_entries)} entries in cache")
     except Exception as e:
         logger.error(f"Failed to store entries in cache: {e}")
-        rprint(f"[yellow]Warning: Could not cache data: {e}[/yellow]")
+        rprint(
+            f"[{colors.WARNING}]Warning: Could not cache data: {e}[/{colors.WARNING}]"
+        )
 
 
 @handle_timew_errors
@@ -222,7 +227,7 @@ def generate_report(
         if cached_entries:
             all_entries = cached_entries
             rprint(
-                f"[blue]📋 Using cached data for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}...[/blue]"
+                f"[{colors.INFO}]📋 Using cached data for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}...[/{colors.INFO}]"
             )
         else:
             logger.debug("No cached data found")
@@ -230,7 +235,7 @@ def generate_report(
     if not all_entries:
         # Export directly from timewarrior
         rprint(
-            f"[blue]📤 Exporting data directly from timewarrior for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}...[/blue]"
+            f"[{colors.INFO}]📤 Exporting data directly from timewarrior for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}...[/{colors.INFO}]"
         )
 
         exported_entries = []
@@ -239,8 +244,8 @@ def generate_report(
             exported_entries.extend(day_entries)
 
         if exported_entries:
-            rprint("[green]✓ Export complete![/green]\n")
-        
+            rprint(f"[{colors.SUCCESS}]✓ Export complete![/{colors.SUCCESS}]\n")
+
         # Remove duplicate entries
         exported_entries = _remove_duplicate_entries(exported_entries)
 
@@ -260,17 +265,21 @@ def generate_report(
                     db.store_time_entries(day_entries, entry_date)
 
                 logger.info("Stored entries in cache")
-                
+
                 # Now re-fetch from cache to apply filters correctly
                 all_entries = db.get_time_entries(report_start, report_end, tags=tags)
-                
+
             except Exception as e:
                 logger.error(f"Failed to cache entries: {e}")
-                rprint(f"[yellow]Warning: Could not cache data: {e}[/yellow]")
+                rprint(
+                    f"[{colors.WARNING}]Warning: Could not cache data: {e}[/{colors.WARNING}]"
+                )
                 # If cache failed, use exported entries but filter manually
                 all_entries = exported_entries
                 if tags:
-                     all_entries = [e for e in all_entries if any(t in tags for t in e.tags)]
+                    all_entries = [
+                        e for e in all_entries if any(t in tags for t in e.tags)
+                    ]
         else:
             # No cache, use exported entries filtered manually
             all_entries = exported_entries
@@ -279,13 +288,15 @@ def generate_report(
 
     if not all_entries:
         rprint(
-            f"[yellow]No time entries found for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}[/yellow]"
+            f"[{colors.WARNING}]No time entries found for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}[/{colors.WARNING}]"
         )
         return
 
     # Generate and display the report
-    weekly_report = report_gen.generate_report(all_entries, report_start, report_end, tags=tags)
-    
+    weekly_report = report_gen.generate_report(
+        all_entries, report_start, report_end, tags=tags
+    )
+
     if output_format == "markdown":
         markdown = report_gen.format_as_markdown(weekly_report)
         print(markdown)
@@ -344,7 +355,7 @@ def list_tags() -> None:
     tags = db.get_all_tags()
 
     if not tags:
-        rprint("[yellow]No tags found in database[/yellow]")
+        rprint(f"[{colors.WARNING}]No tags found in database[/{colors.WARNING}]")
         return
 
     table = Table(title="Known Tags")
@@ -434,8 +445,8 @@ def create_report_commands() -> typer.Typer:
         ),
     ) -> None:
         """Generate a detailed report for the specified week or custom date range.
-        
-        You can filter by tags, specific dates, or week offsets. 
+
+        You can filter by tags, specific dates, or week offsets.
         Reports can be output in different formats for sharing or data analysis.
         """
         # Convert comma-separated tags string to a list

@@ -11,6 +11,7 @@ from rich import print as rprint
 from ..models import TimeEntry
 from ..logging_config import get_logger
 from ..exceptions import TimewarriorError
+from .. import colors
 
 logger = get_logger(__name__)
 console = Console()
@@ -143,17 +144,21 @@ def handle_timew_errors(func):
                 error_msg = e.stderr if e.stderr else str(e)
 
             if "No data found" in error_msg:
-                rprint("[yellow]No data found for the specified timespan[/yellow]")
+                rprint(
+                    f"[{colors.WARNING}]No data found for the specified timespan[/{colors.WARNING}]"
+                )
             elif "There is no active time tracking" in error_msg:
-                rprint("[yellow]No active timer to stop[/yellow]")
+                rprint(f"[{colors.WARNING}]No active timer to stop[/{colors.WARNING}]")
             elif "Nothing to undo" in error_msg:
-                rprint("[yellow]Nothing to undo - no recent operations found[/yellow]")
+                rprint(
+                    f"[{colors.WARNING}]Nothing to undo - no recent operations found[/{colors.WARNING}]"
+                )
             elif "You cannot overlap intervals" in error_msg:
                 rprint(
-                    "[yellow]⚠️  Time overlap detected - the specified start time conflicts with existing intervals[/yellow]"
+                    f"[{colors.WARNING}]⚠️  Time overlap detected - the specified start time conflicts with existing intervals[/{colors.WARNING}]"
                 )
                 rprint(
-                    "[dim]Hint: Use 'timew stop' to end current tracking, or choose a different start time[/dim]"
+                    f"[{colors.DIM}]Hint: Use 'timew stop' to end current tracking, or choose a different start time[/{colors.DIM}]"
                 )
             raise
         except FileNotFoundError:
