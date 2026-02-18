@@ -66,13 +66,13 @@ class Database:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY (id, date)
                 );
-                
+
                 CREATE TABLE IF NOT EXISTS weekly_reports (
                     week_start TEXT PRIMARY KEY,
                     report_data TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
-                
+
                 CREATE INDEX IF NOT EXISTS idx_time_entries_date ON time_entries(date);
                 CREATE INDEX IF NOT EXISTS idx_time_entries_tag ON time_entries(tag);
             """
@@ -87,7 +87,7 @@ class Database:
 
                 conn.execute(
                     """
-                    INSERT OR REPLACE INTO time_entries 
+                    INSERT OR REPLACE INTO time_entries
                     (id, start_time, end_time, tag, annotation, date, hours)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
@@ -167,7 +167,7 @@ class Database:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
                 """
-                SELECT 
+                SELECT
                     tag,
                     SUM(hours) as total_hours,
                     MAX(date) as last_used

@@ -15,10 +15,15 @@ def test_generate_report_markdown_format(mock_report_generator, mock_database):
     start_date = date(2023, 1, 1)
     end_date = date(2023, 1, 3)
     
-    # We use a patch for 'print' or 'rprint' to verify output if we want, 
+    # We use a patch for 'print' or 'rprint' to verify output if we want,
     # but here we mainly care about the call to ReportGenerator
-    with patch("time_helper.cli.report_commands.rprint") as mock_rprint:
-        generate_report(start_date=start_date, end_date=end_date, output_format="markdown", use_cache=True)
+    with patch("time_helper.cli.report_commands.rprint"):
+        generate_report(
+            start_date=start_date,
+            end_date=end_date,
+            output_format="markdown",
+            use_cache=True
+        )
     
     report_gen_instance.format_as_markdown.assert_called()
     # verify that it didn't call the terminal printer
@@ -36,7 +41,7 @@ def test_generate_report_csv_format(mock_report_generator, mock_database):
     
     start_date = date(2023, 1, 1)
     
-    with patch("time_helper.cli.report_commands.rprint") as mock_rprint:
+    with patch("time_helper.cli.report_commands.rprint"):
         generate_report(start_date=start_date, output_format="csv", use_cache=True)
     
     report_gen_instance.format_as_csv.assert_called()

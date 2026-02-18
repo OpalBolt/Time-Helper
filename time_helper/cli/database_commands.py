@@ -90,7 +90,7 @@ def _display_dry_run_summary(
         earliest_date: Earliest date in data
         latest_date: Latest date in data
     """
-    rprint(f"\n[bold blue]Dry Run Summary:[/bold blue]")
+    rprint("\n[bold blue]Dry Run Summary:[/bold blue]")
     rprint(f"[green]Total entries to import: {total_entries:,}[/green]")
     rprint(f"[green]Date range: {earliest_date} to {latest_date}[/green]")
     rprint(f"[green]Number of days: {len(entries_by_date)}[/green]")
@@ -140,7 +140,9 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
 
     action_word = "Analyzing" if dry_run else "Importing"
     rprint(
-        f"[bold blue]{action_word} all timewarrior data{'...' if not dry_run else ' (dry run)...'}[/bold blue]"
+        "[bold blue]{} all timewarrior data{}[/bold blue]".format(
+            action_word, "..." if not dry_run else " (dry run)..."
+        )
     )
 
     # Get all data from timewarrior
@@ -182,7 +184,7 @@ def import_all_data(dry_run: bool = False, force: bool = False) -> None:
             logger.error(f"Failed to import entries for {entry_date}: {e}")
             rprint(f"[red]Error importing data for {entry_date}: {e}[/red]")
 
-    rprint(f"\n[bold green]✓ Import complete![/bold green]")
+    rprint("\n[bold green]✓ Import complete![/bold green]")
     rprint(
         f"[green]Successfully imported {imported_count:,} out of {total_entries:,} entries[/green]"
     )
