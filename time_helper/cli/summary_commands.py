@@ -1,6 +1,5 @@
 """Summary and display commands for time tracking data."""
 
-import json
 from collections import defaultdict
 from typing import List, Optional
 import typer

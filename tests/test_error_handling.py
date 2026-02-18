@@ -1,8 +1,7 @@
 """Tests for global error handling."""
 
 import pytest
-import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from time_helper.cli import main
 from time_helper.exceptions import TimeHelperError
 

@@ -1,13 +1,10 @@
 """Tests for report generation and export commands."""
 
 from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from datetime import date
 
 from time_helper.cli import app
-from time_helper.cli.report_commands import (
-    generate_report,
-)  # Import the actual function to mock it
 
 runner = CliRunner()
 

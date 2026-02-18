@@ -1,4 +1,3 @@
-import pytest
 from datetime import date
 from time_helper.report_generator import ReportGenerator
 from time_helper.models import TimeEntry, WeeklyReport, DailyReport, TagSummary

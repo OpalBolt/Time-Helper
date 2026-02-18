@@ -1,5 +1,4 @@
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from datetime import date
 from time_helper.cli.report_commands import generate_report
 

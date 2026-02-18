@@ -1,7 +1,5 @@
-import pytest
 from datetime import date
 from time_helper.report_generator import ReportGenerator
-from time_helper.models import TimeEntry
 
 def test_generate_report_with_filters():
     generator = ReportGenerator()

@@ -2,14 +2,14 @@
 
 import json
 import subprocess
-from datetime import datetime, timedelta, date
-from typing import List, Optional
+from datetime import datetime, timedelta
+from typing import List
 from rich.console import Console
-from rich.table import Table
 from rich import print as rprint
 
 from ..models import TimeEntry
 from ..logging_config import get_logger
+from ..exceptions import TimeHelperError
 from ..exceptions import TimewarriorError
 
 logger = get_logger(__name__)

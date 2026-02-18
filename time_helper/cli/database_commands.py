@@ -2,13 +2,12 @@
 
 import json
 import sqlite3
-import subprocess
 from datetime import datetime
 from typing import Dict, List
 import typer
 from rich import print as rprint
 
-from .utils import run_timew_command, handle_timew_errors, parse_timew_export
+from .utils import run_timew_command, handle_timew_errors
 from ..database import Database
 from ..models import TimeEntry
 from ..logging_config import get_logger

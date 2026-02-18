@@ -5,7 +5,7 @@ import os
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from pathlib import Path
-from .models import TimeEntry, WeeklyReport, DailyReport, TagSummary
+from .models import TimeEntry, WeeklyReport
 
 
 class Database:

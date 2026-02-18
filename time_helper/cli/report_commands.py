@@ -1,7 +1,5 @@
 """Report generation and export commands."""
 
-import json
-import subprocess
 from datetime import date, timedelta, datetime
 from typing import List, Optional
 import typer

@@ -1,11 +1,10 @@
-"""Enhanced report generator with rich formatting and comprehensive weekly reports."""
+"""Enhanced report generator with rich formatting and reports."""
 
 from typing import List, Dict
 from datetime import date, timedelta
 from collections import defaultdict
 from rich.console import Console
 from rich.table import Table
-from rich.panel import Panel
 from rich import print as rprint
 from .models import TimeEntry, WeeklyReport, DailyReport, TagSummary
 

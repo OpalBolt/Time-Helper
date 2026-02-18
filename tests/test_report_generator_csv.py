@@ -1,4 +1,3 @@
-import pytest
 import io
 import csv
 from datetime import date

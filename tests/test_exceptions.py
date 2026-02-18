@@ -1,4 +1,3 @@
-import pytest
 import subprocess
 from time_helper.exceptions import TimeHelperError, TimewarriorError
 

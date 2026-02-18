@@ -1,7 +1,6 @@
 """Timer-related commands for starting, stopping, and managing timers."""
 
 import readline
-import subprocess
 import sys
 from typing import List, Optional
 import typer
