@@ -56,9 +56,18 @@ All commands are executed via `nix run .#time-helper -- [COMMAND]`. You can alia
 | `su :week` | Quick summary |
 | `db path` | Show database location |
 
-### Task Runner
+### Development Commands
 
-For convenience, a Taskfile is provided for common development tasks:
+Run tests, linting, formatting, and builds using Nix commands:
+
+```bash
+nix run .#tests   # Run tests
+nix run .#lint    # Run linter
+nix run .#format  # Run formatter
+nix build         # Build package
+```
+
+Alternatively, use the provided Taskfile for convenience:
 
 ```bash
 # Run all checks (format, lint, test, build)
@@ -71,19 +80,10 @@ task format  # Run black
 task build   # Build package
 ```
 
-Alternatively, you can run Nix commands directly:
-
-```bash
-nix run .#tests   # Run tests
-nix run .#lint    # Run linter
-nix run .#format  # Run formatter
-nix build         # Build package
-```
-
 ### Building the Application
 To build the `time-helper` application and generate a standalone executable, use:
 ```bash
-nix build .#time-helper
+nix build
 # or
 task build
 ```
