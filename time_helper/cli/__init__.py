@@ -12,6 +12,7 @@ from .timer_commands import (
 from .summary_commands import display_summary
 from .report_commands import create_report_commands
 from .database_commands import create_database_commands
+from .config_commands import create_config_commands
 from .annotate_commands import undo_annotation, handle_annotate_args
 from ..logging_config import setup_logging, get_logger
 from ..exceptions import TimeHelperError
@@ -29,6 +30,7 @@ app = typer.Typer(
 app.add_typer(create_timer_commands(), name="timer", help="Timer management")
 app.add_typer(create_report_commands(), name="report", help="Report generation")
 app.add_typer(create_database_commands(), name="db", help="Database management")
+app.add_typer(create_config_commands(), name="config", help="Configuration management")
 
 
 @app.callback(invoke_without_command=True)

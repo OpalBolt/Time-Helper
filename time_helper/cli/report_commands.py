@@ -240,7 +240,7 @@ def generate_report(
 
         if exported_entries:
             rprint("[green]✓ Export complete![/green]\n")
-        
+
         # Remove duplicate entries
         exported_entries = _remove_duplicate_entries(exported_entries)
 
@@ -260,17 +260,19 @@ def generate_report(
                     db.store_time_entries(day_entries, entry_date)
 
                 logger.info("Stored entries in cache")
-                
+
                 # Now re-fetch from cache to apply filters correctly
                 all_entries = db.get_time_entries(report_start, report_end, tags=tags)
-                
+
             except Exception as e:
                 logger.error(f"Failed to cache entries: {e}")
                 rprint(f"[yellow]Warning: Could not cache data: {e}[/yellow]")
                 # If cache failed, use exported entries but filter manually
                 all_entries = exported_entries
                 if tags:
-                     all_entries = [e for e in all_entries if any(t in tags for t in e.tags)]
+                    all_entries = [
+                        e for e in all_entries if any(t in tags for t in e.tags)
+                    ]
         else:
             # No cache, use exported entries filtered manually
             all_entries = exported_entries
@@ -284,8 +286,10 @@ def generate_report(
         return
 
     # Generate and display the report
-    weekly_report = report_gen.generate_report(all_entries, report_start, report_end, tags=tags)
-    
+    weekly_report = report_gen.generate_report(
+        all_entries, report_start, report_end, tags=tags
+    )
+
     if output_format == "markdown":
         markdown = report_gen.format_as_markdown(weekly_report)
         print(markdown)
@@ -434,8 +438,8 @@ def create_report_commands() -> typer.Typer:
         ),
     ) -> None:
         """Generate a detailed report for the specified week or custom date range.
-        
-        You can filter by tags, specific dates, or week offsets. 
+
+        You can filter by tags, specific dates, or week offsets.
         Reports can be output in different formats for sharing or data analysis.
         """
         # Convert comma-separated tags string to a list

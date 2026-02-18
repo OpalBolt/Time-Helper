@@ -123,7 +123,7 @@ class WeeklyReport:
     def get_week_range_string(self) -> str:
         """Get formatted date range string."""
         start_str = self.start_date.strftime("%B %d")
-        
+
         if self.end_date:
             end_str = self.end_date.strftime("%B %d, %Y")
             # If same year, don't repeat it in start
@@ -131,7 +131,7 @@ class WeeklyReport:
                 return f"{start_str} - {end_str}"
             else:
                 return f"{self.start_date.strftime('%B %d, %Y')} - {end_str}"
-        
+
         # Fallback to logic for standard week
         week_end = self.start_date
         # ... existing logic or simplified ...
@@ -140,11 +140,12 @@ class WeeklyReport:
             week_end = max(self.daily_reports.keys())
         else:
             from datetime import timedelta
+
             week_end = self.start_date + timedelta(days=6)
-            
+
         end_str = week_end.strftime("%B %d, %Y")
         if self.start_date.year == week_end.year:
-             return f"{start_str} - {end_str}"
+            return f"{start_str} - {end_str}"
         return f"{self.start_date.strftime('%B %d, %Y')} - {end_str}"
 
     def get_sorted_daily_reports(self) -> List[DailyReport]:

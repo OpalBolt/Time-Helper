@@ -31,6 +31,7 @@
           pydantic # Data validation
           loguru # Modern logging
           pyinstaller # building python package
+          tomli-w # TOML writing
         ]
       );
       # Build the actual package
@@ -50,6 +51,7 @@
           rich
           pydantic
           loguru
+          tomli-w
         ];
 
         # Runtime dependencies (timewarrior)

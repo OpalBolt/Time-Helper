@@ -8,6 +8,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich import print as rprint
 from .models import TimeEntry, WeeklyReport, DailyReport, TagSummary
+from .config import Config
 
 
 class ReportGenerator:
@@ -15,6 +16,14 @@ class ReportGenerator:
 
     def __init__(self):
         self.console = Console()
+        self._config = None
+
+    @property
+    def config(self) -> Config:
+        """Lazy load config when needed."""
+        if self._config is None:
+            self._config = Config.load()
+        return self._config
 
     def generate_report(
         self,
@@ -198,30 +207,17 @@ class ReportGenerator:
         return ", ".join(breakdown_parts) if breakdown_parts else "No hours"
 
     def _get_tag_color(self, tag: str) -> str:
-        """Get a consistent color for a tag based on its name."""
-        # Simple hash-based color assignment
-        colors = [
-            "red",
-            "green",
-            "yellow",
-            "blue",
-            "magenta",
-            "cyan",
-            "bright_red",
-            "bright_green",
-            "bright_yellow",
-            "bright_blue",
-            "bright_magenta",
-            "bright_cyan",
-        ]
+        """Get a consistent color for a tag based on its name.
 
-        color_index = hash(tag) % len(colors)
-        return colors[color_index]
+        Uses the configured color scheme.
+        """
+        scheme = self.config.get_scheme()
+        return scheme.get_color_for_tag(tag)
 
     def format_as_markdown(self, report: WeeklyReport) -> str:
         """Format the report as Markdown."""
         lines = []
-        
+
         # Header
         title = f"Time Report - {report.get_week_range_string()}"
         lines.append(f"# {title}")
@@ -234,12 +230,14 @@ class ReportGenerator:
         # Daily reports
         lines.append("## Daily Reports")
         lines.append("")
-        
+
         for daily_report in report.get_sorted_daily_reports():
-            day_header = f"{daily_report.get_day_name()} ({daily_report.get_formatted_date()})"
+            day_header = (
+                f"{daily_report.get_day_name()} ({daily_report.get_formatted_date()})"
+            )
             lines.append(f"### {day_header}")
             lines.append("")
-            
+
             if not daily_report.tag_summaries:
                 lines.append("*No time tracked*")
                 lines.append("")
@@ -247,7 +245,7 @@ class ReportGenerator:
 
             lines.append("| Tag | Hours | Annotations |")
             lines.append("| :--- | :--- | :--- |")
-            
+
             # Sort tags by hours (descending)
             sorted_tags = sorted(
                 daily_report.tag_summaries.values(),
@@ -257,8 +255,10 @@ class ReportGenerator:
 
             for tag_summary in sorted_tags:
                 annotations = ", ".join(tag_summary.get_formatted_annotations())
-                lines.append(f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {annotations} |")
-            
+                lines.append(
+                    f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {annotations} |"
+                )
+
             lines.append("")
             lines.append(f"**Daily Total: {daily_report.total_hours:.2f} hours**")
             lines.append("")
@@ -266,20 +266,22 @@ class ReportGenerator:
         # Weekly summary
         lines.append("## Weekly Summary")
         lines.append("")
-        
+
         if not report.weekly_summaries:
             lines.append("*No time tracked this week*")
         else:
             lines.append("| Tag | Total Hours | Daily Breakdown |")
             lines.append("| :--- | :--- | :--- |")
-            
+
             for tag_summary in report.get_sorted_weekly_summaries():
                 # Calculate daily breakdown
                 daily_breakdown = self._get_daily_breakdown(
                     tag_summary.tag, report.daily_reports
                 )
-                lines.append(f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {daily_breakdown} |")
-            
+                lines.append(
+                    f"| {tag_summary.tag} | {tag_summary.total_hours:.2f} | {daily_breakdown} |"
+                )
+
             lines.append("")
             lines.append(f"**Total Hours: {report.total_hours:.2f} hours**")
 
@@ -295,7 +297,7 @@ class ReportGenerator:
         writer = csv.DictWriter(output, fieldnames=fieldnames)
 
         writer.writeheader()
-        
+
         for daily_report in report.get_sorted_daily_reports():
             # Sort tags by hours (descending)
             sorted_tags = sorted(
@@ -306,12 +308,14 @@ class ReportGenerator:
 
             for tag_summary in sorted_tags:
                 annotations = "; ".join(tag_summary.get_formatted_annotations())
-                writer.writerow({
-                    "Date": daily_report.get_formatted_date(),
-                    "Day": daily_report.get_day_name(),
-                    "Tag": tag_summary.tag,
-                    "Hours": f"{tag_summary.total_hours:.2f}",
-                    "Annotations": annotations
-                })
+                writer.writerow(
+                    {
+                        "Date": daily_report.get_formatted_date(),
+                        "Day": daily_report.get_day_name(),
+                        "Tag": tag_summary.tag,
+                        "Hours": f"{tag_summary.total_hours:.2f}",
+                        "Annotations": annotations,
+                    }
+                )
 
         return output.getvalue()
