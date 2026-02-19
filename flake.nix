@@ -61,6 +61,8 @@
         postInstall = ''
           # Generate completions with explicit shell types
           # This avoids shell detection issues in the Nix build sandbox
+          # Set environment variable to disable auto-detection and enable explicit shell arguments
+          export _TYPER_COMPLETE_TEST_DISABLE_SHELL_DETECTION=1
 
           # Zsh completion
           $out/bin/time-helper --show-completion zsh > time-helper.zsh
