@@ -1,7 +1,5 @@
 """Report generation and export commands."""
 
-import json
-import subprocess
 from datetime import date, timedelta, datetime
 from typing import List, Optional
 import typer
@@ -34,7 +32,7 @@ def _determine_target_week(
         Target date for the week
     """
     logger.debug(
-        f"Determining target week: date_str={date_str}, offset={week_offset}, year={year}"
+        f"Determining target week: date_str={date_str}, offset={week_offset}, year={year}"  # noqa: E501
     )
 
     if date_str:
@@ -109,17 +107,19 @@ def _parse_date_string(date_str: Optional[str]) -> Optional[date]:
 
 @handle_timew_errors
 def export_week(
-    week_offset: int = 0, year: Optional[int] = None, date_str: Optional[str] = None
+    week_offset: int = 0,
+    year: Optional[int] = None,
+    date_str: Optional[str] = None,  # noqa: E501
 ) -> None:
     """Export week data for use in other tools.
 
     Args:
-        week_offset: Week offset from current week (0=current, -1=last week, etc.)
+        week_offset: Week offset from current week (0=current, -1=last week, etc.)  # noqa: E501
         year: Year for the week (defaults to current year)
         date_str: Specific date within the week (YYYY-MM-DD format)
     """
     logger.info(
-        f"Exporting week data: offset={week_offset}, year={year}, date={date_str}"
+        f"Exporting week data: offset={week_offset}, year={year}, date={date_str}"  # noqa: E501
     )
 
     db = Database()
@@ -132,7 +132,7 @@ def export_week(
     week_dates = week_utils.get_week_dates(week_start)
 
     rprint(
-        f"[blue]📤 Exporting data for week of {week_start.strftime('%B %d, %Y')}...[/blue]"
+        f"[blue]📤 Exporting data for week of {week_start.strftime('%B %d, %Y')}...[/blue]"  # noqa: E501
     )
 
     all_entries: List[TimeEntry] = []
@@ -147,11 +147,13 @@ def export_week(
 
     if not all_entries:
         rprint(
-            f"[yellow]No time entries found for week of {week_start.strftime('%B %d, %Y')}[/yellow]"
+            f"[yellow]No time entries found for week of {week_start.strftime('%B %d, %Y')}[/yellow]"  # noqa: E501
         )
         return
 
-    rprint(f"[green]✓ Exported {len(all_entries)} entries for the week[/green]")
+    rprint(
+        f"[green]✓ Exported {len(all_entries)} entries for the week[/green]"
+    )  # noqa: E501
 
     # Store in cache
     try:
@@ -176,7 +178,7 @@ def generate_report(
     """Generate a detailed report for the specified week or date range.
 
     Args:
-        week_offset: Week offset from current week (0=current, -1=last week, etc.)
+        week_offset: Week offset from current week (0=current, -1=last week, etc.)  # noqa: E501
         year: Year for the week (defaults to current year)
         date_str: Specific date within the week (YYYY-MM-DD format)
         use_cache: Use cached data from database
@@ -186,7 +188,7 @@ def generate_report(
         output_format: Desired output format (terminal, markdown, csv)
     """
     logger.info(
-        f"Generating report: offset={week_offset}, year={year}, date={date_str}, cache={use_cache}, range={start_date}-{end_date}, tags={tags}, format={output_format}"
+        f"Generating report: offset={week_offset}, year={year}, date={date_str}, cache={use_cache}, range={start_date}-{end_date}, tags={tags}, format={output_format}"  # noqa: E501
     )
 
     db = Database()
@@ -218,11 +220,13 @@ def generate_report(
 
     if use_cache:
         logger.debug("Attempting to load from cache")
-        cached_entries = db.get_time_entries(report_start, report_end, tags=tags)
+        cached_entries = db.get_time_entries(
+            report_start, report_end, tags=tags
+        )  # noqa: E501
         if cached_entries:
             all_entries = cached_entries
             rprint(
-                f"[blue]📋 Using cached data for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}...[/blue]"
+                f"[blue]📋 Using cached data for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}...[/blue]"  # noqa: E501
             )
         else:
             logger.debug("No cached data found")
@@ -230,7 +234,7 @@ def generate_report(
     if not all_entries:
         # Export directly from timewarrior
         rprint(
-            f"[blue]📤 Exporting data directly from timewarrior for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}...[/blue]"
+            f"[blue]📤 Exporting data directly from timewarrior for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}...[/blue]"  # noqa: E501
         )
 
         exported_entries = []
@@ -240,7 +244,7 @@ def generate_report(
 
         if exported_entries:
             rprint("[green]✓ Export complete![/green]\n")
-        
+
         # Remove duplicate entries
         exported_entries = _remove_duplicate_entries(exported_entries)
 
@@ -260,32 +264,42 @@ def generate_report(
                     db.store_time_entries(day_entries, entry_date)
 
                 logger.info("Stored entries in cache")
-                
+
                 # Now re-fetch from cache to apply filters correctly
-                all_entries = db.get_time_entries(report_start, report_end, tags=tags)
-                
+                all_entries = db.get_time_entries(
+                    report_start, report_end, tags=tags
+                )  # noqa: E501
+
             except Exception as e:
                 logger.error(f"Failed to cache entries: {e}")
                 rprint(f"[yellow]Warning: Could not cache data: {e}[/yellow]")
                 # If cache failed, use exported entries but filter manually
                 all_entries = exported_entries
                 if tags:
-                     all_entries = [e for e in all_entries if any(t in tags for t in e.tags)]
+                    all_entries = [
+                        e
+                        for e in all_entries
+                        if any(t in tags for t in e.tags)  # noqa: E501
+                    ]
         else:
             # No cache, use exported entries filtered manually
             all_entries = exported_entries
             if tags:
-                all_entries = [e for e in all_entries if any(t in tags for t in e.tags)]
+                all_entries = [
+                    e for e in all_entries if any(t in tags for t in e.tags)
+                ]  # noqa: E501
 
     if not all_entries:
         rprint(
-            f"[yellow]No time entries found for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}[/yellow]"
+            f"[yellow]No time entries found for {report_start.strftime('%Y-%m-%d')} to {report_end.strftime('%Y-%m-%d')}[/yellow]"  # noqa: E501
         )
         return
 
     # Generate and display the report
-    weekly_report = report_gen.generate_report(all_entries, report_start, report_end, tags=tags)
-    
+    weekly_report = report_gen.generate_report(
+        all_entries, report_start, report_end, tags=tags
+    )  # noqa: E501
+
     if output_format == "markdown":
         markdown = report_gen.format_as_markdown(weekly_report)
         print(markdown)
@@ -377,10 +391,13 @@ def create_report_commands() -> typer.Typer:
             0,
             "--week",
             "-w",
-            help="Week offset from current week (0=current, -1=last week, etc.)",
+            help="Week offset from current week (0=current, -1=last week, etc.)",  # noqa: E501
         ),
         year: Optional[int] = typer.Option(
-            None, "--year", "-y", help="Year for the week (defaults to current year)"
+            None,
+            "--year",
+            "-y",
+            help="Year for the week (defaults to current year)",  # noqa: E501
         ),
         date_str: Optional[str] = typer.Option(
             None,
@@ -398,10 +415,13 @@ def create_report_commands() -> typer.Typer:
             0,
             "--week",
             "-w",
-            help="Week offset from current week (0=current, -1=last week, etc.)",
+            help="Week offset from current week (0=current, -1=last week, etc.)",  # noqa: E501
         ),
         year: Optional[int] = typer.Option(
-            None, "--year", "-y", help="Year for the week (defaults to current year)"
+            None,
+            "--year",
+            "-y",
+            help="Year for the week (defaults to current year)",  # noqa: E501
         ),
         date_str: Optional[str] = typer.Option(
             None,
@@ -415,12 +435,14 @@ def create_report_commands() -> typer.Typer:
             help="Start date for the report (YYYY-MM-DD format)",
         ),
         end_date: Optional[str] = typer.Option(
-            None, "--end-date", help="End date for the report (YYYY-MM-DD format)"
+            None,
+            "--end-date",
+            help="End date for the report (YYYY-MM-DD format)",  # noqa: E501
         ),
         tags: Optional[str] = typer.Option(
             None,
             "--tags",
-            help="Comma-separated list of tags to filter by (e.g., 'tag1,tag2')",
+            help="Comma-separated list of tags to filter by (e.g., 'tag1,tag2')",  # noqa: E501
         ),
         output_format: str = typer.Option(
             "terminal",
@@ -433,10 +455,10 @@ def create_report_commands() -> typer.Typer:
             True, "--cache/--no-cache", help="Use cached data from database"
         ),
     ) -> None:
-        """Generate a detailed report for the specified week or custom date range.
-        
-        You can filter by tags, specific dates, or week offsets. 
-        Reports can be output in different formats for sharing or data analysis.
+        """Generate a detailed report for the specified week or custom date range.  # noqa: E501
+
+        You can filter by tags, specific dates, or week offsets.
+        Reports can be output in different formats for sharing or data analysis.  # noqa: E501
         """
         # Convert comma-separated tags string to a list
         tags_list = tags.split(",") if tags else None
@@ -455,7 +477,9 @@ def create_report_commands() -> typer.Typer:
 
     @report_app.command("list-weeks")
     def list_weeks_command(
-        count: int = typer.Option(10, "--count", "-c", help="Number of weeks to show")
+        count: int = typer.Option(
+            10, "--count", "-c", help="Number of weeks to show"
+        )  # noqa: E501
     ) -> None:
         """List recent weeks with available data."""
         list_weeks(count)

@@ -35,7 +35,8 @@ class WeekUtils:
 
             # Apply the same week offset from the first Monday of that year
             current_week_number = (
-                current_week_start - WeekUtils.get_week_start(date(today.year, 1, 1))
+                current_week_start
+                - WeekUtils.get_week_start(date(today.year, 1, 1))  # noqa: E501
             ).days // 7
             target_week_start = first_monday + timedelta(
                 weeks=current_week_number + week_offset
@@ -47,4 +48,4 @@ class WeekUtils:
     def format_week_range(week_start: date) -> str:
         """Format a week range string."""
         week_end = week_start + timedelta(days=6)
-        return f"{week_start.strftime('%Y-%m-%d')} to {week_end.strftime('%Y-%m-%d')}"
+        return f"{week_start.strftime('%Y-%m-%d')} to {week_end.strftime('%Y-%m-%d')}"  # noqa: E501

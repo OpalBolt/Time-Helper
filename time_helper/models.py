@@ -28,14 +28,14 @@ class TimeEntry(BaseModel):
         return cls(**data)
 
     def parse_start(self) -> datetime:
-        """Parse the start time string to datetime with timezone conversion to local time."""
+        """Parse the start time string to datetime with timezone conversion to local time."""  # noqa: E501
         utc_dt = datetime.strptime(self.start, "%Y%m%dT%H%M%SZ").replace(
             tzinfo=timezone.utc
         )
         return utc_dt.astimezone()  # Convert to local timezone
 
     def parse_end(self) -> Optional[datetime]:
-        """Parse the end time string to datetime with timezone conversion to local time. Returns None for active timers."""
+        """Parse the end time string to datetime with timezone conversion to local time. Returns None for active timers."""  # noqa: E501
         if self.end is None:
             return None
         utc_dt = datetime.strptime(self.end, "%Y%m%dT%H%M%SZ").replace(
@@ -44,7 +44,7 @@ class TimeEntry(BaseModel):
         return utc_dt.astimezone()  # Convert to local timezone
 
     def get_duration_hours(self) -> float:
-        """Calculate duration in hours. For active timers, calculates up to now."""
+        """Calculate duration in hours. For active timers, calculates up to now."""  # noqa: E501
         start_dt = self.parse_start()
         end_dt = self.parse_end()
 
@@ -77,7 +77,9 @@ class TagSummary:
 
         # Filter out empty annotations and return unique ones
         unique_annotations = list(
-            dict.fromkeys(ann for ann in self.annotations if ann and ann.strip())
+            dict.fromkeys(
+                ann for ann in self.annotations if ann and ann.strip()
+            )  # noqa: E501
         )
 
         return (
@@ -123,7 +125,7 @@ class WeeklyReport:
     def get_week_range_string(self) -> str:
         """Get formatted date range string."""
         start_str = self.start_date.strftime("%B %d")
-        
+
         if self.end_date:
             end_str = self.end_date.strftime("%B %d, %Y")
             # If same year, don't repeat it in start
@@ -131,7 +133,7 @@ class WeeklyReport:
                 return f"{start_str} - {end_str}"
             else:
                 return f"{self.start_date.strftime('%B %d, %Y')} - {end_str}"
-        
+
         # Fallback to logic for standard week
         week_end = self.start_date
         # ... existing logic or simplified ...
@@ -140,19 +142,25 @@ class WeeklyReport:
             week_end = max(self.daily_reports.keys())
         else:
             from datetime import timedelta
+
             week_end = self.start_date + timedelta(days=6)
-            
+
         end_str = week_end.strftime("%B %d, %Y")
         if self.start_date.year == week_end.year:
-             return f"{start_str} - {end_str}"
+            return f"{start_str} - {end_str}"
         return f"{self.start_date.strftime('%B %d, %Y')} - {end_str}"
 
     def get_sorted_daily_reports(self) -> List[DailyReport]:
         """Get daily reports sorted by date."""
-        return [self.daily_reports[date] for date in sorted(self.daily_reports.keys())]
+        return [
+            self.daily_reports[date]
+            for date in sorted(self.daily_reports.keys())  # noqa: E501
+        ]
 
     def get_sorted_weekly_summaries(self) -> List[TagSummary]:
         """Get weekly tag summaries sorted by total hours (descending)."""
         return sorted(
-            self.weekly_summaries.values(), key=lambda x: x.total_hours, reverse=True
+            self.weekly_summaries.values(),
+            key=lambda x: x.total_hours,
+            reverse=True,  # noqa: E501
         )

@@ -1,7 +1,6 @@
 """Timer-related commands for starting, stopping, and managing timers."""
 
 import readline
-import subprocess
 import sys
 from typing import List, Optional
 import typer
@@ -33,7 +32,9 @@ class TagCompleter:
         text_lower = text.lower()
 
         # Filter tags that start with the input text (case-insensitive)
-        matches = [tag for tag in self.tags if tag.lower().startswith(text_lower)]
+        matches = [
+            tag for tag in self.tags if tag.lower().startswith(text_lower)
+        ]  # noqa: E501
 
         # Return the state-th match, or None if there aren't enough matches
         try:
@@ -92,7 +93,9 @@ def start_timer(args: Optional[List[str]] = None) -> None:
 
         # Get user input with tab completion
         prompt_text = "Enter tag and optional annotation (tag annotation): "
-        user_input = get_user_input_with_completion(prompt_text, available_tags).strip()
+        user_input = get_user_input_with_completion(
+            prompt_text, available_tags
+        ).strip()  # noqa: E501
 
         if not user_input:
             raise TimeHelperError("Tag cannot be empty")
@@ -139,17 +142,19 @@ def start_timer(args: Optional[List[str]] = None) -> None:
         except TimewarriorError as e:
             error_msg = str(e)
             if "You cannot overlap intervals" in error_msg:
-                # There's an overlap - ask for confirmation before using :adjust
+                # There's an overlap - ask for confirmation before using :adjust  # noqa: E501
                 rprint(
-                    f"[yellow]⚠️  The start time {time_arg} would overlap with existing intervals.[/yellow]"
+                    f"[yellow]⚠️  The start time {time_arg} would overlap with existing intervals.[/yellow]"  # noqa: E501
                 )
 
                 # Show only the entries that would actually be impacted
                 try:
                     from datetime import time as Time
 
-                    # Parse the input time (handle formats like "06:40" or "0640")
-                    time_str = time_arg.replace(":", "")  # Remove colon if present
+                    # Parse the input time (handle formats like "06:40" or "0640")  # noqa: E501
+                    time_str = time_arg.replace(
+                        ":", ""
+                    )  # Remove colon if present  # noqa: E501
                     if len(time_str) == 4 and time_str.isdigit():
                         input_hour = int(time_str[:2])
                         input_minute = int(time_str[2:])
@@ -162,7 +167,7 @@ def start_timer(args: Optional[List[str]] = None) -> None:
                     impacted_entries = []
 
                     logger.debug(
-                        f"Checking {len(current_entries)} entries for impact with input time {input_time}"
+                        f"Checking {len(current_entries)} entries for impact with input time {input_time}"  # noqa: E501
                     )
 
                     # Process entries in chronological order (oldest first)
@@ -171,39 +176,41 @@ def start_timer(args: Optional[List[str]] = None) -> None:
                         entry_end = entry.parse_end()
 
                         logger.debug(
-                            f"Entry {entry.id}: {entry_start} - {entry_end.time() if entry_end else 'ongoing'} tags: {entry.tags}"
+                            f"Entry {entry.id}: {entry_start} - {entry_end.time() if entry_end else 'ongoing'} tags: {entry.tags}"  # noqa: E501
                         )
 
                         if entry_end is None:
-                            # Active timer - would be impacted if input time is before its start
+                            # Active timer - would be impacted if input time is before its start  # noqa: E501
                             if input_time <= entry_start:
                                 logger.debug(
-                                    f"Entry {entry.id} would be impacted (active timer would be stopped)"
+                                    f"Entry {entry.id} would be impacted (active timer would be stopped)"  # noqa: E501
                                 )
                                 impacted_entries.append(entry)
                         else:
                             entry_end_time = entry_end.time()
-                            # Entry would be impacted if input time falls within its interval
+                            # Entry would be impacted if input time falls within its interval  # noqa: E501
                             if entry_start <= input_time < entry_end_time:
                                 logger.debug(
-                                    f"Entry {entry.id} would be impacted (would be shortened)"
+                                    f"Entry {entry.id} would be impacted (would be shortened)"  # noqa: E501
                                 )
                                 impacted_entries.append(entry)
                             elif input_time < entry_start:
-                                # Starting before this entry - this entry would be impacted
+                                # Starting before this entry - this entry would be impacted  # noqa: E501
                                 logger.debug(
-                                    f"Entry {entry.id} would be impacted (starts after input time)"
+                                    f"Entry {entry.id} would be impacted (starts after input time)"  # noqa: E501
                                 )
                                 impacted_entries.append(entry)
                             else:
                                 logger.debug(
-                                    f"Entry {entry.id} not impacted (ends before input time)"
+                                    f"Entry {entry.id} not impacted (ends before input time)"  # noqa: E501
                                 )
 
-                    logger.debug(f"Found {len(impacted_entries)} impacted entries")
+                    logger.debug(
+                        f"Found {len(impacted_entries)} impacted entries"
+                    )  # noqa: E501
 
                     if impacted_entries:
-                        # Show impacted entries in the original order (newest first) to match undo format
+                        # Show impacted entries in the original order (newest first) to match undo format  # noqa: E501
                         # Limit to first 8 entries to avoid overwhelming output
                         entries_to_show = list(reversed(impacted_entries))[:8]
                         display_entries(
@@ -213,11 +220,11 @@ def start_timer(args: Optional[List[str]] = None) -> None:
 
                         if len(impacted_entries) > 8:
                             rprint(
-                                f"[dim]... and {len(impacted_entries) - 8} more entries[/dim]"
+                                f"[dim]... and {len(impacted_entries) - 8} more entries[/dim]"  # noqa: E501
                             )
                     else:
                         logger.debug(
-                            "No impacted entries found, this might be a logic error"
+                            "No impacted entries found, this might be a logic error"  # noqa: E501
                         )
 
                 except Exception as ex:
@@ -225,9 +232,13 @@ def start_timer(args: Optional[List[str]] = None) -> None:
                     # Fallback to showing recent entries
                     current_entries = get_current_entries()
                     if current_entries and len(current_entries) > 0:
-                        display_entries(current_entries[-2:], "Recent entries:")
+                        display_entries(
+                            current_entries[-2:], "Recent entries:"
+                        )  # noqa: E501
 
-                confirm = typer.confirm("Automatically adjust conflicting intervals?")
+                confirm = typer.confirm(
+                    "Automatically adjust conflicting intervals?"
+                )  # noqa: E501
                 if confirm:
                     cmd_args.extend([time_arg, ":adjust"])
                     rprint("[dim]Using :adjust to resolve overlaps...[/dim]")
@@ -237,7 +248,7 @@ def start_timer(args: Optional[List[str]] = None) -> None:
             elif "cannot be set in the future" in error_msg:
                 # Provide a hint for future time
                 raise TimeHelperError(
-                    f"{error_msg}\n[yellow]Hint: Provide a past or current time.[/yellow]"
+                    f"{error_msg}\n[yellow]Hint: Provide a past or current time.[/yellow]"  # noqa: E501
                 )
             else:
                 # Some other error - re-raise
@@ -250,16 +261,24 @@ def start_timer(args: Optional[List[str]] = None) -> None:
     except TimewarriorError as e:
         error_msg = str(e)
         if "You cannot overlap intervals" in error_msg:
-            # Provide helpful guidance for overlaps that couldn't be auto-resolved
-            rprint("[yellow]⚠️  Cannot start timer - time overlap detected[/yellow]")
+            # Provide helpful guidance for overlaps that couldn't be auto-resolved  # noqa: E501
             rprint(
-                "[dim]The specified start time conflicts with existing time intervals.[/dim]"
+                "[yellow]⚠️  Cannot start timer - time overlap detected[/yellow]"  # noqa: E501
+            )
+            rprint(
+                "[dim]The specified start time conflicts with existing time intervals.[/dim]"  # noqa: E501
             )
             rprint("[dim]Options:[/dim]")
-            rprint("[dim]  • Stop current tracking: [/dim][cyan]timew stop[/cyan]")
+            rprint(
+                "[dim]  • Stop current tracking: [/dim][cyan]timew stop[/cyan]"
+            )  # noqa: E501
             rprint("[dim]  • Check active timers: [/dim][cyan]timew[/cyan]")
-            rprint("[dim]  • View recent intervals: [/dim][cyan]timew summary[/cyan]")
-            rprint("[dim]  • Manually resolve with: [/dim][cyan]timew modify[/cyan]")
+            rprint(
+                "[dim]  • View recent intervals: [/dim][cyan]timew summary[/cyan]"  # noqa: E501
+            )
+            rprint(
+                "[dim]  • Manually resolve with: [/dim][cyan]timew modify[/cyan]"  # noqa: E501
+            )
             return
         else:
             # Re-raise other errors to be handled by decorator
@@ -293,12 +312,14 @@ def undo_last_action(single_operation: bool = False) -> None:
     """Undo the last timewarrior operation and show before/after status.
 
     Args:
-        single_operation: If True, only perform one undo operation regardless of meaningfulness
+        single_operation: If True, only perform one undo operation regardless of meaningfulness  # noqa: E501
 
     If single_operation is False and the undo only removes tags or annotations,
     it will repeat the undo until there's a meaningful state change.
     """
-    logger.debug(f"Starting undo operation (single_operation={single_operation})")
+    logger.debug(
+        f"Starting undo operation (single_operation={single_operation})"
+    )  # noqa: E501
 
     # Get initial state
     initial_entries = get_current_entries()
@@ -312,7 +333,7 @@ def undo_last_action(single_operation: bool = False) -> None:
         logger.debug(f"Undo attempt {undo_count}")
 
         rprint(
-            f"\n[bold blue]⏪ Undoing last timewarrior operation... (attempt {undo_count})[/bold blue]"
+            f"\n[bold blue]⏪ Undoing last timewarrior operation... (attempt {undo_count})[/bold blue]"  # noqa: E501
         )
 
         # Execute the undo command
@@ -321,7 +342,7 @@ def undo_last_action(single_operation: bool = False) -> None:
         # Get entries after this undo
         new_entries = get_current_entries()
 
-        # If single_operation is True, stop after one undo regardless of meaningfulness
+        # If single_operation is True, stop after one undo regardless of meaningfulness  # noqa: E501
         if single_operation:
             display_entries(new_entries, "\nLast 3 entries after undo:")
             rprint("\n[green]✓ Undid last annotation change[/green]")
@@ -334,20 +355,26 @@ def undo_last_action(single_operation: bool = False) -> None:
             display_entries(new_entries, "\nLast 3 entries after undo:")
             if undo_count > 1:
                 rprint(
-                    f"\n[green]✓ Completed {undo_count} undo operations to reach meaningful state change[/green]"
+                    f"\n[green]✓ Completed {undo_count} undo operations to reach meaningful state change[/green]"  # noqa: E501
                 )
-            logger.info(f"Completed undo operation after {undo_count} attempts")
+            logger.info(
+                f"Completed undo operation after {undo_count} attempts"
+            )  # noqa: E501
             break
         else:
             # Only annotation/tag changes, continue undoing
             current_entries = new_entries
-            display_entries(new_entries, f"\nLast 3 entries after undo {undo_count}:")
-            rprint("[yellow]Only tags/annotations changed, continuing undo...[/yellow]")
+            display_entries(
+                new_entries, f"\nLast 3 entries after undo {undo_count}:"
+            )  # noqa: E501
+            rprint(
+                "[yellow]Only tags/annotations changed, continuing undo...[/yellow]"  # noqa: E501
+            )
 
             # Safety check to prevent infinite loops
             if undo_count >= 10:
                 rprint(
-                    "[yellow]Stopped after 10 undo operations to prevent infinite loop[/yellow]"
+                    "[yellow]Stopped after 10 undo operations to prevent infinite loop[/yellow]"  # noqa: E501
                 )
                 logger.warning(
                     "Stopped undo after 10 attempts to prevent infinite loop"
@@ -364,7 +391,7 @@ def create_timer_commands() -> typer.Typer:
     def start_command(
         args: Optional[List[str]] = typer.Argument(
             None,
-            help="Tag and optional annotation, with optional time (e.g., 'admin meeting 0700')",
+            help="Tag and optional annotation, with optional time (e.g., 'admin meeting 0700')",  # noqa: E501
         )
     ) -> None:
         """Start a new timer with optional tags and time."""

@@ -5,7 +5,7 @@ import os
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from pathlib import Path
-from .models import TimeEntry, WeeklyReport, DailyReport, TagSummary
+from .models import TimeEntry, WeeklyReport
 
 
 class Database:
@@ -66,19 +66,23 @@ class Database:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY (id, date)
                 );
-                
+
                 CREATE TABLE IF NOT EXISTS weekly_reports (
                     week_start TEXT PRIMARY KEY,
                     report_data TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
-                
-                CREATE INDEX IF NOT EXISTS idx_time_entries_date ON time_entries(date);
-                CREATE INDEX IF NOT EXISTS idx_time_entries_tag ON time_entries(tag);
+
+                CREATE INDEX IF NOT EXISTS idx_time_entries_date
+                    ON time_entries(date);
+                CREATE INDEX IF NOT EXISTS idx_time_entries_tag
+                    ON time_entries(tag);
             """
             )
 
-    def store_time_entries(self, entries: List[TimeEntry], entry_date: date) -> None:
+    def store_time_entries(
+        self, entries: List[TimeEntry], entry_date: date
+    ) -> None:  # noqa: E501
         """Store time entries in the database."""
         with sqlite3.connect(self.db_path) as conn:
             for entry in entries:
@@ -87,7 +91,7 @@ class Database:
 
                 conn.execute(
                     """
-                    INSERT OR REPLACE INTO time_entries 
+                    INSERT OR REPLACE INTO time_entries
                     (id, start_time, end_time, tag, annotation, date, hours)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
@@ -103,7 +107,10 @@ class Database:
                 )
 
     def get_time_entries(
-        self, start_date: date, end_date: date, tags: Optional[List[str]] = None
+        self,
+        start_date: date,
+        end_date: date,
+        tags: Optional[List[str]] = None,  # noqa: E501
     ) -> List[TimeEntry]:
         """Get time entries for a date range, optionally filtered by tags."""
         query = """
@@ -150,7 +157,7 @@ class Database:
 
             row = cursor.fetchone()
             if row:
-                # For now, return None as we'd need to serialize/deserialize the report
+                # For now, return None as we'd need to serialize/deserialize the report  # noqa: E501
                 # This is a placeholder for actual implementation
                 return None
 
@@ -167,7 +174,7 @@ class Database:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
                 """
-                SELECT 
+                SELECT
                     tag,
                     SUM(hours) as total_hours,
                     MAX(date) as last_used
@@ -184,7 +191,9 @@ class Database:
                         "tag": row[0],
                         "total_hours": row[1],
                         "last_used": (
-                            datetime.fromisoformat(row[2]).date() if row[2] else None
+                            datetime.fromisoformat(row[2]).date()
+                            if row[2]
+                            else None  # noqa: E501
                         ),
                     }
                 )

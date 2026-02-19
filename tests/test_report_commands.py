@@ -1,13 +1,10 @@
 """Tests for report generation and export commands."""
 
 from typer.testing import CliRunner
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from datetime import date
 
 from time_helper.cli import app
-from time_helper.cli.report_commands import (
-    generate_report,
-)  # Import the actual function to mock it
 
 runner = CliRunner()
 
@@ -99,6 +96,7 @@ def test_generate_command_all_new_options(mock_generate_report):
         output_format="terminal",
     )
     assert result.exit_code == 0
+
 
 @patch("time_helper.cli.report_commands.generate_report")
 def test_generate_command_format(mock_generate_report):

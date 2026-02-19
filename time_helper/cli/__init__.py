@@ -22,13 +22,18 @@ logger = get_logger(__name__)
 
 # Create main app
 app = typer.Typer(
-    help="Time tracking helper tool for timewarrior", pretty_exceptions_enable=False
+    help="Time tracking helper tool for timewarrior",
+    pretty_exceptions_enable=False,  # noqa: E501
 )
 
 # Add sub-commands
 app.add_typer(create_timer_commands(), name="timer", help="Timer management")
-app.add_typer(create_report_commands(), name="report", help="Report generation")
-app.add_typer(create_database_commands(), name="db", help="Database management")
+app.add_typer(
+    create_report_commands(), name="report", help="Report generation"
+)  # noqa: E501
+app.add_typer(
+    create_database_commands(), name="db", help="Database management"
+)  # noqa: E501
 
 
 @app.callback(invoke_without_command=True)
@@ -42,7 +47,10 @@ def main_callback(
         is_eager=True,
     ),
     debug: bool = typer.Option(
-        False, "--debug", help="Enable debug logging (same as -vv)", is_eager=True
+        False,
+        "--debug",
+        help="Enable debug logging (same as -vv)",
+        is_eager=True,  # noqa: E501
     ),
     ctx: typer.Context = typer.Context,
 ) -> None:
@@ -70,7 +78,7 @@ def main_callback(
 def start_command(
     args: Optional[list[str]] = typer.Argument(
         None,
-        help="Tag and optional annotation, with optional time (e.g., 'admin meeting 0700')",
+        help="Tag and optional annotation, with optional time (e.g., 'admin meeting 0700')",  # noqa: E501
     )
 ) -> None:
     """Start a new timer with optional tags and time."""
@@ -111,7 +119,7 @@ def su_command(
         None, help="Filter entries by tag (e.g., 'admin', 'dev')"
     ),
 ) -> None:
-    """Display timewarrior data with formatting and optional tag filtering (short alias)."""
+    """Display timewarrior data with formatting and optional tag filtering (short alias)."""  # noqa: E501
     display_summary(timespan, tag_filter)
 
 
@@ -159,14 +167,14 @@ def main():
         logger.debug(f"Application error: {e}", exc_info=True)
         sys.exit(1)
     except Exception:
-        # Unexpected errors still show traceback in debug mode for easier development
+        # Unexpected errors still show traceback in debug mode for easier development  # noqa: E501
         if "--debug" in sys.argv:
             raise
         logger.exception("An unexpected error occurred")
         console = Console()
         console.print("[bold red]An unexpected error occurred.[/bold red]")
         console.print(
-            "[dim]Use --debug for more information or check the log file.[/dim]"
+            "[dim]Use --debug for more information or check the log file.[/dim]"  # noqa: E501
         )
         sys.exit(1)
 
