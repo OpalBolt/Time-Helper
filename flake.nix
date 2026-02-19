@@ -56,25 +56,22 @@
         buildInputs = [ pkgs.timewarrior ];
 
         # Generate shell completions
-        nativeBuildInputs = [
-          pkgs.installShellFiles
-          pkgs.zsh
-          pkgs.fish
-        ];
+        nativeBuildInputs = [ pkgs.installShellFiles ];
 
         postInstall = ''
-          # Generate completions by entering different shells
+          # Generate completions with explicit shell types
+          # This avoids shell detection issues in the Nix build sandbox
 
-          # Zsh completion - enter zsh shell and run completion generation
-          echo '$out/bin/time-helper --show-completion > time-helper.zsh' | ${pkgs.zsh}/bin/zsh
+          # Zsh completion
+          $out/bin/time-helper --show-completion zsh > time-helper.zsh
           installShellCompletion --cmd time-helper --zsh time-helper.zsh
 
-          # Bash completion - use current bash environment  
-          $out/bin/time-helper --show-completion > time-helper.bash
+          # Bash completion
+          $out/bin/time-helper --show-completion bash > time-helper.bash
           installShellCompletion --cmd time-helper --bash time-helper.bash
 
-          # Fish completion - enter fish shell and run completion generation
-          echo '$out/bin/time-helper --show-completion > time-helper.fish' | ${pkgs.fish}/bin/fish
+          # Fish completion
+          $out/bin/time-helper --show-completion fish > time-helper.fish
           installShellCompletion --cmd time-helper --fish time-helper.fish
         '';
 
